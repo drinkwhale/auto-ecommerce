@@ -19,10 +19,10 @@
 - `tests/` - 테스트 파일
 
 ## Phase 3.1: 프로젝트 설정
-- [ ] T001 프로젝트 구조 생성 및 Next.js 14+ 초기화
-- [ ] T002 TypeScript, Tailwind CSS, Prisma 의존성 설치 및 설정
-- [ ] T003 [P] ESLint, Prettier 린팅 및 포매팅 도구 설정
-- [ ] T004 [P] PostgreSQL 데이터베이스 스키마 초기 설정
+- [x] T001 프로젝트 구조 생성 및 Next.js 14+ 초기화
+- [x] T002 TypeScript, Tailwind CSS, Prisma 의존성 설치 및 설정
+- [x] T003 [P] ESLint, Prettier 린팅 및 포매팅 도구 설정
+- [x] T004 [P] PostgreSQL 데이터베이스 스키마 초기 설정
 
 ## Phase 3.2: 테스트 우선 (TDD) ⚠️ 3.3 이전 필수 완료
 **중요: 구현 전에 테스트를 작성하고 반드시 실패해야 합니다**

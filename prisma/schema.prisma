@@ -1,0 +1,76 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// 사용자 모델
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  password  String
+  role      String   @default("USER") // USER, ADMIN
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // 관계
+  orders    Order[]
+
+  @@map("users")
+}
+
+// 상품 모델 (기본 구조만)
+model Product {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  price       Decimal
+  stock       Int      @default(0)
+  sku         String   @unique
+  status      String   @default("ACTIVE") // ACTIVE, INACTIVE, DRAFT
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // 관계
+  orderItems OrderItem[]
+
+  @@map("products")
+}
+
+// 주문 모델 (기본 구조만)
+model Order {
+  id        String   @id @default(cuid())
+  userId    String
+  status    String   @default("PENDING") // PENDING, PROCESSING, COMPLETED, CANCELLED
+  total     Decimal
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // 관계
+  user       User        @relation(fields: [userId], references: [id])
+  orderItems OrderItem[]
+
+  @@map("orders")
+}
+
+// 주문 상품 모델
+model OrderItem {
+  id        String @id @default(cuid())
+  orderId   String
+  productId String
+  quantity  Int
+  price     Decimal
+
+  // 관계
+  order   Order   @relation(fields: [orderId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
+
+  @@map("order_items")
+}

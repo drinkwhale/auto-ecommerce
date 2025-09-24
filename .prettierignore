@@ -1,0 +1,27 @@
+# Dependencies
+node_modules/
+
+# Production builds
+.next/
+dist/
+build/
+
+# Generated files
+*.log
+.env*
+
+# Lock files
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Cache
+.cache/
+
+# Database
+*.db
+*.sqlite
+
+# OS
+.DS_Store
+Thumbs.db

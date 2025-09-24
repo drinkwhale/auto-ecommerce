@@ -1,0 +1,624 @@
+# GraphQL Schema for Auto E-commerce System
+# 글로벌 쇼핑몰 상품 아웃소싱 오픈마켓 등록 시스템
+
+directive @auth(requires: UserRole = SELLER) on FIELD_DEFINITION
+directive @rateLimit(max: Int!, window: String!) on FIELD_DEFINITION
+
+# Scalars
+scalar DateTime
+scalar UUID
+scalar JSON
+scalar Upload
+
+# Enums
+enum UserRole {
+  ADMIN
+  SELLER
+  VIEWER
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+enum ProductStatus {
+  DRAFT
+  PROCESSING
+  READY
+  REGISTERED
+  ERROR
+  ARCHIVED
+}
+
+enum SourcePlatform {
+  TAOBAO
+  AMAZON
+  ALIBABA
+}
+
+enum OpenMarketPlatform {
+  ELEVENST
+  GMARKET
+  AUCTION
+  COUPANG
+  NAVER
+}
+
+enum RegistrationStatus {
+  PENDING
+  PROCESSING
+  SUCCESS
+  FAILED
+  UPDATING
+}
+
+enum OrderStatus {
+  RECEIVED
+  CONFIRMED
+  PURCHASING
+  PURCHASED
+  SHIPPING
+  DELIVERED
+  CANCELLED
+  REFUNDED
+}
+
+enum ShippingStatus {
+  PREPARING
+  SHIPPED
+  IN_TRANSIT
+  DELIVERED
+  FAILED
+}
+
+enum ImageStatus {
+  PENDING
+  PROCESSING
+  PROCESSED
+  FAILED
+}
+
+enum Currency {
+  USD
+  CNY
+  KRW
+  EUR
+  JPY
+}
+
+enum TranslationEngine {
+  GOOGLE
+  PAPAGO
+  BAIDU
+}
+
+enum ImageSize {
+  THUMBNAIL
+  MEDIUM
+  LARGE
+  ORIGINAL
+}
+
+enum ImageFormat {
+  WEBP
+  JPG
+  PNG
+}
+
+# Input Types
+input LoginInput {
+  email: String!
+  password: String!
+}
+
+input RegisterInput {
+  email: String!
+  password: String!
+  name: String!
+  phone: String
+  company: String
+  businessNumber: String
+}
+
+input ProductCreateInput {
+  sourceUrl: String!
+  marginRate: Float!
+  targetMarkets: [OpenMarketPlatform!]!
+  autoUpdate: Boolean = true
+}
+
+input ProductUpdateInput {
+  marginRate: Float
+  targetMarkets: [OpenMarketPlatform!]
+  autoUpdate: Boolean
+  translatedTitle: String
+  translatedDescription: String
+}
+
+input ProductFilterInput {
+  status: ProductStatus
+  platform: SourcePlatform
+  search: String
+  userId: UUID
+}
+
+input OrderFilterInput {
+  status: OrderStatus
+  platform: OpenMarketPlatform
+  productId: UUID
+  customerId: String
+}
+
+input OrderUpdateInput {
+  status: OrderStatus
+  trackingNumber: String
+  memo: String
+}
+
+input PaginationInput {
+  page: Int = 1
+  limit: Int = 20
+}
+
+# Types
+type User {
+  id: UUID!
+  email: String!
+  name: String!
+  role: UserRole!
+  status: UserStatus!
+  profile: UserProfile
+  preferences: UserPreferences
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  lastLoginAt: DateTime
+
+  # Relations
+  products(filter: ProductFilterInput, pagination: PaginationInput): ProductConnection! @auth
+  orders(filter: OrderFilterInput, pagination: PaginationInput): OrderConnection! @auth
+}
+
+type UserProfile {
+  phone: String
+  company: String
+  businessNumber: String
+  address: Address
+}
+
+type UserPreferences {
+  defaultMarginRate: Float!
+  preferredOpenMarkets: [OpenMarketPlatform!]!
+  language: String!
+  notificationSettings: JSON
+}
+
+type Product {
+  id: UUID!
+  userId: UUID!
+  user: User!
+
+  # Source Information
+  sourceInfo: ProductSourceInfo!
+
+  # Product Data
+  originalData: ProductOriginalData!
+  translatedData: ProductTranslatedData
+
+  # Sales Settings
+  salesSettings: ProductSalesSettings!
+
+  # Registration Status
+  registrations: [ProductRegistration!]!
+
+  # Monitoring
+  monitoring: ProductMonitoring
+
+  # Statistics
+  statistics: ProductStatistics
+
+  status: ProductStatus!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+
+  # Relations
+  orders: [Order!]!
+  images: [ProductImage!]!
+}
+
+type ProductSourceInfo {
+  sourceUrl: String!
+  sourcePlatform: SourcePlatform!
+  sourceProductId: String!
+  lastCrawledAt: DateTime!
+}
+
+type ProductOriginalData {
+  title: String!
+  description: String!
+  price: ProductPrice!
+  images: [ProductImage!]!
+  specifications: JSON
+  category: String!
+  brand: String
+  model: String
+  tags: [String!]!
+}
+
+type ProductTranslatedData {
+  title: String!
+  description: String!
+  specifications: JSON
+  translatedAt: DateTime!
+  translationEngine: TranslationEngine!
+  qualityScore: Float!
+}
+
+type ProductSalesSettings {
+  marginRate: Float!
+  salePrice: Float!
+  minPrice: Float
+  maxPrice: Float
+  targetMarkets: [OpenMarketPlatform!]!
+  autoUpdate: Boolean!
+}
+
+type ProductRegistration {
+  id: UUID!
+  platform: OpenMarketPlatform!
+  platformProductId: String
+  status: RegistrationStatus!
+  categoryMapping: String!
+  registeredAt: DateTime
+  lastUpdatedAt: DateTime
+  errors: [RegistrationError!]
+}
+
+type ProductMonitoring {
+  isActive: Boolean!
+  lastCheckedAt: DateTime
+  priceHistory: [PriceHistory!]!
+  stockStatus: StockStatus!
+  alerts: [ProductAlert!]!
+}
+
+type ProductStatistics {
+  totalOrders: Int!
+  totalRevenue: Float!
+  totalProfit: Float!
+  profitRate: Float!
+  averageOrderValue: Float!
+  conversionRate: Float!
+}
+
+type ProductPrice {
+  amount: Float!
+  currency: Currency!
+  originalAmount: Float!
+}
+
+type ProductImage {
+  id: UUID!
+  productId: UUID!
+  originalUrl: String!
+  processedImages: [ProcessedImageVariant!]!
+  metadata: ImageMetadata!
+  status: ImageStatus!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type ProcessedImageVariant {
+  size: ImageSize!
+  url: String!
+  width: Int!
+  height: Int!
+  fileSize: Int!
+  format: ImageFormat!
+}
+
+type ImageMetadata {
+  originalFileName: String
+  mimeType: String!
+  fileSize: Int!
+  dimensions: ImageDimensions!
+  dominantColors: [String!]!
+  hasWatermark: Boolean!
+}
+
+type ImageDimensions {
+  width: Int!
+  height: Int!
+}
+
+type Order {
+  id: UUID!
+  productId: UUID!
+  userId: UUID!
+
+  # Relations
+  product: Product!
+  user: User!
+
+  # Order Information
+  marketOrder: MarketOrderInfo!
+  sourcePurchase: SourcePurchaseInfo
+  customer: CustomerInfo!
+  shipping: ShippingInfo!
+  payment: PaymentInfo!
+
+  status: OrderStatus!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  completedAt: DateTime
+}
+
+type MarketOrderInfo {
+  platform: OpenMarketPlatform!
+  orderId: String!
+  orderDate: DateTime!
+  quantity: Int!
+  unitPrice: Float!
+  totalPrice: Float!
+}
+
+type SourcePurchaseInfo {
+  purchaseId: String
+  purchaseDate: DateTime
+  purchasePrice: Float!
+  purchaseStatus: String!
+  trackingNumber: String
+}
+
+type CustomerInfo {
+  name: String!
+  phone: String!
+  email: String
+  address: Address!
+  memo: String
+}
+
+type ShippingInfo {
+  carrier: String
+  trackingNumber: String
+  shippedAt: DateTime
+  deliveredAt: DateTime
+  status: ShippingStatus!
+}
+
+type PaymentInfo {
+  saleAmount: Float!
+  costAmount: Float!
+  shippingFee: Float!
+  commission: Float!
+  netProfit: Float!
+  profitRate: Float!
+}
+
+type Address {
+  zipCode: String!
+  address1: String!
+  address2: String
+  city: String!
+  state: String
+  country: String!
+}
+
+# Supporting Types
+type RegistrationError {
+  code: String!
+  message: String!
+  timestamp: DateTime!
+  details: JSON
+}
+
+type PriceHistory {
+  price: Float!
+  currency: Currency!
+  timestamp: DateTime!
+  source: String!
+}
+
+type StockStatus {
+  isInStock: Boolean!
+  quantity: Int
+  lastUpdated: DateTime!
+}
+
+type ProductAlert {
+  id: UUID!
+  type: String!
+  message: String!
+  severity: String!
+  isRead: Boolean!
+  createdAt: DateTime!
+}
+
+type CrawledProductData {
+  title: String!
+  description: String!
+  price: ProductPrice!
+  images: [String!]!
+  specifications: JSON
+  category: String!
+  brand: String
+  tags: [String!]!
+}
+
+# Connection Types (for Pagination)
+type ProductConnection {
+  edges: [ProductEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+type ProductEdge {
+  node: Product!
+  cursor: String!
+}
+
+type OrderConnection {
+  edges: [OrderEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+type OrderEdge {
+  node: Order!
+  cursor: String!
+}
+
+type PageInfo {
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: String
+  endCursor: String
+}
+
+# Analytics Types
+type DashboardStats {
+  totalProducts: Int!
+  activeProducts: Int!
+  totalOrders: Int!
+  totalRevenue: Float!
+  totalProfit: Float!
+  profitRate: Float!
+  recentOrders: [Order!]!
+  topProducts: [Product!]!
+  platformStats: [PlatformStats!]!
+}
+
+type PlatformStats {
+  platform: OpenMarketPlatform!
+  productCount: Int!
+  orderCount: Int!
+  revenue: Float!
+  profit: Float!
+}
+
+# Response Types
+type AuthResponse {
+  success: Boolean!
+  user: User
+  accessToken: String
+  refreshToken: String
+  message: String
+}
+
+type ProductResponse {
+  success: Boolean!
+  product: Product
+  message: String
+}
+
+type OrderResponse {
+  success: Boolean!
+  order: Order
+  message: String
+}
+
+type CrawlResponse {
+  success: Boolean!
+  data: CrawledProductData
+  message: String
+}
+
+# Root Types
+type Query {
+  # Authentication
+  me: User @auth
+
+  # Products
+  products(filter: ProductFilterInput, pagination: PaginationInput): ProductConnection! @auth
+  product(id: UUID!): Product @auth
+
+  # Orders
+  orders(filter: OrderFilterInput, pagination: PaginationInput): OrderConnection! @auth
+  order(id: UUID!): Order @auth
+
+  # Analytics
+  dashboardStats(period: String = "month"): DashboardStats! @auth
+
+  # System
+  categoryMappings(sourcePlatform: SourcePlatform, targetPlatform: OpenMarketPlatform): [CategoryMapping!]!
+  exchangeRates: [ExchangeRate!]!
+}
+
+type Mutation {
+  # Authentication
+  login(input: LoginInput!): AuthResponse! @rateLimit(max: 5, window: "5m")
+  register(input: RegisterInput!): AuthResponse! @rateLimit(max: 3, window: "1h")
+  logout: Boolean!
+  refreshToken: AuthResponse!
+
+  # Products
+  createProduct(input: ProductCreateInput!): ProductResponse! @auth @rateLimit(max: 10, window: "1m")
+  updateProduct(id: UUID!, input: ProductUpdateInput!): ProductResponse! @auth
+  deleteProduct(id: UUID!): Boolean! @auth
+
+  # Product Actions
+  crawlProduct(url: String!): CrawlResponse! @auth @rateLimit(max: 20, window: "1h")
+  translateProduct(id: UUID!, engine: TranslationEngine): ProductResponse! @auth
+  registerToMarket(id: UUID!, platform: OpenMarketPlatform!): ProductResponse! @auth
+  updateProductOnMarket(id: UUID!, platform: OpenMarketPlatform!): ProductResponse! @auth
+
+  # Orders
+  updateOrder(id: UUID!, input: OrderUpdateInput!): OrderResponse! @auth
+  cancelOrder(id: UUID!, reason: String): OrderResponse! @auth
+  refundOrder(id: UUID!, reason: String): OrderResponse! @auth
+
+  # File Upload
+  uploadProductImages(productId: UUID!, images: [Upload!]!): [ProductImage!]! @auth
+
+  # Bulk Operations
+  bulkUpdateProducts(ids: [UUID!]!, input: ProductUpdateInput!): [ProductResponse!]! @auth
+  bulkRegisterProducts(ids: [UUID!]!, platform: OpenMarketPlatform!): [ProductResponse!]! @auth
+}
+
+type Subscription {
+  # Product Updates
+  productUpdated(userId: UUID!): Product! @auth
+
+  # Order Updates
+  orderReceived(userId: UUID!): Order! @auth
+  orderStatusChanged(userId: UUID!): Order! @auth
+
+  # System Notifications
+  systemAlert(userId: UUID!): SystemAlert! @auth
+}
+
+# Additional Types for System
+type CategoryMapping {
+  id: UUID!
+  sourceCategory: String!
+  sourcePlatform: SourcePlatform!
+  mappings: [PlatformCategoryMapping!]!
+  confidence: Float!
+  isVerified: Boolean!
+  createdAt: DateTime!
+}
+
+type PlatformCategoryMapping {
+  platform: OpenMarketPlatform!
+  categoryCode: String!
+  categoryName: String!
+  path: [String!]!
+}
+
+type ExchangeRate {
+  fromCurrency: Currency!
+  toCurrency: Currency!
+  rate: Float!
+  updatedAt: DateTime!
+}
+
+type SystemAlert {
+  id: UUID!
+  type: String!
+  title: String!
+  message: String!
+  severity: String!
+  userId: UUID
+  createdAt: DateTime!
+}

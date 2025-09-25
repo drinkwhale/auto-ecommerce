@@ -31,7 +31,7 @@
 - [x] T005 [P] 인증 API 계약 테스트 in tests/contract/auth.contract.test.ts
 - [x] T006 [P] 상품 관리 API 계약 테스트 in tests/contract/products.contract.test.ts
 - [x] T007 [P] 주문 관리 API 계약 테스트 in tests/contract/orders.contract.test.ts
-- [ ] T008 [P] 통계 API 계약 테스트 in tests/contract/analytics.contract.test.ts
+- [x] T008 [P] 통계 API 계약 테스트 in tests/contract/analytics.contract.test.ts
 
 ### GraphQL 스키마 테스트
 - [ ] T009 [P] GraphQL 스키마 검증 테스트 in tests/graphql/schema.test.ts

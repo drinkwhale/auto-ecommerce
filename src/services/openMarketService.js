@@ -1,7 +1,7 @@
 const axios = require('axios');
 const crypto = require('crypto');
 const winston = require('winston');
-const RateLimiter = require('../utils/rateLimiter');
+// const RateLimiter = require('../utils/rateLimiter'); // 제거됨 - Next.js에서 사용 시 구현 필요
 
 const logger = winston.createLogger({
   level: process.env.LOG_LEVEL || 'info',
@@ -30,7 +30,7 @@ class OpenMarketService {
       ...config
     };
 
-    this.rateLimiter = new RateLimiter();
+    // this.rateLimiter = new RateLimiter(); // 제거됨 - Next.js에서 사용 시 구현 필요
     this.axios = this.createAxiosInstance();
   }
 

@@ -28,9 +28,9 @@
 **중요: 구현 전에 테스트를 작성하고 반드시 실패해야 합니다**
 
 ### REST API 계약 테스트
-- [ ] T005 [P] 인증 API 계약 테스트 in tests/contract/auth.contract.test.ts
-- [ ] T006 [P] 상품 관리 API 계약 테스트 in tests/contract/products.contract.test.ts
-- [ ] T007 [P] 주문 관리 API 계약 테스트 in tests/contract/orders.contract.test.ts
+- [x] T005 [P] 인증 API 계약 테스트 in tests/contract/auth.contract.test.ts
+- [x] T006 [P] 상품 관리 API 계약 테스트 in tests/contract/products.contract.test.ts
+- [x] T007 [P] 주문 관리 API 계약 테스트 in tests/contract/orders.contract.test.ts
 - [ ] T008 [P] 통계 API 계약 테스트 in tests/contract/analytics.contract.test.ts
 
 ### GraphQL 스키마 테스트

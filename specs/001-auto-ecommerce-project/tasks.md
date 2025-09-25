@@ -34,7 +34,7 @@
 - [x] T008 [P] 통계 API 계약 테스트 in tests/contract/analytics.contract.test.ts
 
 ### GraphQL 스키마 테스트
-- [ ] T009 [P] GraphQL 스키마 검증 테스트 in tests/graphql/schema.test.ts
+- [x] T009 [P] GraphQL 스키마 검증 테스트 in tests/graphql/schema.test.ts
 - [ ] T010 [P] GraphQL 쿼리 동작 테스트 in tests/graphql/queries.test.ts
 - [ ] T011 [P] GraphQL 뮤테이션 동작 테스트 in tests/graphql/mutations.test.ts
 

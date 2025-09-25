@@ -36,7 +36,7 @@
 ### GraphQL 스키마 테스트
 - [x] T009 [P] GraphQL 스키마 검증 테스트 in tests/graphql/schema.test.ts
 - [x] T010 [P] GraphQL 쿼리 동작 테스트 in tests/graphql/queries.test.ts
-- [ ] T011 [P] GraphQL 뮤테이션 동작 테스트 in tests/graphql/mutations.test.ts
+- [x] T011 [P] GraphQL 뮤테이션 동작 테스트 in tests/graphql/mutations.test.ts
 
 ### 통합 테스트 (사용자 시나리오 기반)
 - [ ] T012 [P] 상품 크롤링 및 등록 플로우 통합 테스트 in tests/integration/product-registration.test.ts

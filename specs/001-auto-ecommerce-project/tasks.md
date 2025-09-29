@@ -41,7 +41,7 @@
 ### 통합 테스트 (사용자 시나리오 기반)
 - [x] T012 [P] 상품 크롤링 및 등록 플로우 통합 테스트 in tests/integration/product-registration.test.ts
 - [x] T013 [P] 주문 수신 및 처리 플로우 통합 테스트 in tests/integration/order-processing.test.ts
-- [ ] T014 [P] 번역 및 이미지 처리 통합 테스트 in tests/integration/content-processing.test.ts
+- [x] T014 [P] 번역 및 이미지 처리 통합 테스트 in tests/integration/content-processing.test.ts
 
 ## Phase 3.3: 데이터 모델 구현 (테스트 실패 확인 후에만)
 

@@ -48,7 +48,7 @@
 ### Prisma 스키마 및 모델
 - [x] T015 [P] User 엔티티 Prisma 스키마 in prisma/schema.prisma
 - [x] T016 [P] Product 엔티티 Prisma 스키마 in prisma/schema.prisma
-- [ ] T017 [P] Order 엔티티 Prisma 스키마 in prisma/schema.prisma
+- [x] T017 [P] Order 엔티티 Prisma 스키마 in prisma/schema.prisma
 - [ ] T018 [P] CategoryMapping 엔티티 Prisma 스키마 in prisma/schema.prisma
 - [ ] T019 [P] ProductImage 엔티티 Prisma 스키마 in prisma/schema.prisma
 - [ ] T020 [P] ActivityLog 엔티티 Prisma 스키마 in prisma/schema.prisma

@@ -84,6 +84,7 @@ model Product {
 
   // 관계
   user            User                 @relation(fields: [userId], references: [id])
+  orders          Order[]
   orderItems      OrderItem[]
   images          ProductImage[]
   registrations   ProductRegistration[]
@@ -127,17 +128,67 @@ enum RegistrationStatus {
   UPDATING
 }
 
-// 주문 모델 (기본 구조만)
+// 주문 상태 열거형
+enum OrderStatus {
+  RECEIVED     // 주문접수
+  CONFIRMED    // 주문확인
+  PURCHASING   // 원본 구매중
+  PURCHASED    // 원본 구매완료
+  SHIPPING     // 배송중
+  DELIVERED    // 배송완료
+  CANCELLED    // 취소
+  REFUNDED     // 환불
+}
+
+// 구매 상태 열거형
+enum PurchaseStatus {
+  PENDING
+  PROCESSING
+  SUCCESS
+  FAILED
+}
+
+// 배송 상태 열거형
+enum ShippingStatus {
+  PREPARING
+  SHIPPED
+  IN_TRANSIT
+  DELIVERED
+  FAILED
+}
+
+// 주문 모델 - 완전한 구현 (설계 문서 기반)
 model Order {
-  id        String   @id @default(cuid())
-  userId    String
-  status    String   @default("PENDING") // PENDING, PROCESSING, COMPLETED, CANCELLED
-  total     Decimal
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id        String @id @default(cuid())
+  productId String // 상품 ID
+  userId    String // 판매자 ID
+
+  // 오픈마켓 주문 정보 (JSON 컬럼)
+  marketOrder Json // MarketOrderInfo: { platform, orderId, orderDate, quantity, unitPrice, totalPrice }
+
+  // 원본 구매 정보 (JSON 컬럼)
+  sourcePurchase Json? // SourcePurchaseInfo: { purchaseId?, purchaseDate?, purchasePrice, purchaseStatus, trackingNumber? }
+
+  // 고객 정보 (JSON 컬럼)
+  customer Json // CustomerInfo: { name, phone, email?, address, memo? }
+
+  // 배송 정보 (JSON 컬럼)
+  shipping Json // ShippingInfo: { carrier?, trackingNumber?, shippedAt?, deliveredAt?, status }
+
+  // 금액 정보 (JSON 컬럼)
+  payment Json // PaymentInfo: { saleAmount, costAmount, shippingFee, commission, netProfit, profitRate }
+
+  // 상태
+  status OrderStatus @default(RECEIVED)
+
+  // 타임스탬프
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  completedAt DateTime?
 
   // 관계
   user       User        @relation(fields: [userId], references: [id])
+  product    Product     @relation(fields: [productId], references: [id])
   orderItems OrderItem[]
 
   @@map("orders")

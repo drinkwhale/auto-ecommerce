@@ -49,10 +49,10 @@
 - [x] T015 [P] User 엔티티 Prisma 스키마 in prisma/schema.prisma
 - [x] T016 [P] Product 엔티티 Prisma 스키마 in prisma/schema.prisma
 - [x] T017 [P] Order 엔티티 Prisma 스키마 in prisma/schema.prisma
-- [ ] T018 [P] CategoryMapping 엔티티 Prisma 스키마 in prisma/schema.prisma
-- [ ] T019 [P] ProductImage 엔티티 Prisma 스키마 in prisma/schema.prisma
-- [ ] T020 [P] ActivityLog 엔티티 Prisma 스키마 in prisma/schema.prisma
-- [ ] T021 [P] SystemConfig 엔티티 Prisma 스키마 in prisma/schema.prisma
+- [x] T018 [P] CategoryMapping 엔티티 Prisma 스키마 in prisma/schema.prisma
+- [x] T019 [P] ProductImage 엔티티 Prisma 스키마 in prisma/schema.prisma
+- [x] T020 [P] ActivityLog 엔티티 Prisma 스키마 in prisma/schema.prisma
+- [x] T021 [P] SystemConfig 엔티티 Prisma 스키마 in prisma/schema.prisma
 
 ### 데이터베이스 마이그레이션
 - [ ] T022 Prisma 마이그레이션 파일 생성 및 데이터베이스 적용

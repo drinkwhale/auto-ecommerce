@@ -308,3 +308,31 @@ model CategoryMapping {
   @@unique([sourceCategory, sourcePlatform])
   @@map("category_mappings")
 }
+
+// 시스템 설정 모델 - 글로벌 설정 관리
+model SystemConfig {
+  id    String @id @default(cuid())
+  key   String @unique // 설정 키 (예: 'default_margin_rate', 'api_rate_limit')
+  value Json   // 설정 값 (다양한 타입 지원을 위해 JSON 사용)
+
+  // 메타데이터
+  category    String  // 설정 카테고리 ('GENERAL', 'API', 'BUSINESS', 'NOTIFICATION')
+  description String? // 설정 설명
+  dataType    String  // 데이터 타입 ('STRING', 'NUMBER', 'BOOLEAN', 'OBJECT', 'ARRAY')
+  isActive    Boolean @default(true) // 활성화 상태
+  isSecret    Boolean @default(false) // 민감한 정보 여부 (암호화 필요)
+
+  // 검증 규칙 (JSON 컬럼)
+  validation Json? // ValidationRule: { required?, min?, max?, pattern?, enum?, custom? }
+
+  // 변경 이력
+  createdBy   String
+  updatedBy   String?
+  lastUpdated DateTime @updatedAt
+
+  // 타임스탬프
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("system_configs")
+}

@@ -55,7 +55,7 @@
 - [x] T021 [P] SystemConfig 엔티티 Prisma 스키마 in prisma/schema.prisma
 
 ### 데이터베이스 마이그레이션
-- [ ] T022 Prisma 마이그레이션 파일 생성 및 데이터베이스 적용
+- [x] T022 Prisma 마이그레이션 파일 생성 및 데이터베이스 적용
 
 ## Phase 3.4: 서비스 계층 구현
 

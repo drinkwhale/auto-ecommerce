@@ -10,25 +10,52 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// 사용자 모델
+// 사용자 모델 - 완전한 구현
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String?
-  password  String
-  role      String   @default("USER") // USER, ADMIN
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          String     @id @default(cuid())
+  email       String     @unique
+  name        String
+  password    String
+  role        UserRole   @default(SELLER)
+  status      UserStatus @default(ACTIVE)
+
+  // 프로필 정보 (JSON 컬럼으로 유연하게 관리)
+  profile     Json?      // UserProfile 타입: { phone?, company?, businessNumber?, address? }
+
+  // 설정 (JSON 컬럼으로 유연하게 관리)
+  preferences Json?      // UserPreferences 타입: { defaultMarginRate, preferredOpenMarkets, notificationSettings, language }
+
+  // 타임스탬프
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  lastLoginAt DateTime?
 
   // 관계
-  orders    Order[]
+  orders       Order[]
+  products     Product[]
+  activityLogs ActivityLog[]
 
   @@map("users")
 }
 
-// 상품 모델 (기본 구조만)
+// 사용자 역할 열거형
+enum UserRole {
+  ADMIN
+  SELLER
+  VIEWER
+}
+
+// 사용자 상태 열거형
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+// 상품 모델 (User 관계 추가)
 model Product {
   id          String   @id @default(cuid())
+  userId      String   // 소유자 추가
   name        String
   description String?
   price       Decimal
@@ -39,6 +66,7 @@ model Product {
   updatedAt   DateTime @updatedAt
 
   // 관계
+  user       User        @relation(fields: [userId], references: [id])
   orderItems OrderItem[]
 
   @@map("products")
@@ -73,4 +101,23 @@ model OrderItem {
   product Product @relation(fields: [productId], references: [id])
 
   @@map("order_items")
+}
+
+// 활동 로그 모델 - User 관계 완성을 위해 추가
+model ActivityLog {
+  id          String   @id @default(cuid())
+  userId      String
+  entityType  String   // 'PRODUCT' | 'ORDER' | 'USER'
+  entityId    String
+  action      String   // 'CREATE', 'UPDATE', 'DELETE', 'REGISTER' 등
+  description String
+  metadata    Json?    // 추가 메타데이터
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+
+  // 관계
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("activity_logs")
 }

@@ -46,7 +46,7 @@
 ## Phase 3.3: 데이터 모델 구현 (테스트 실패 확인 후에만)
 
 ### Prisma 스키마 및 모델
-- [ ] T015 [P] User 엔티티 Prisma 스키마 in prisma/schema.prisma
+- [x] T015 [P] User 엔티티 Prisma 스키마 in prisma/schema.prisma
 - [ ] T016 [P] Product 엔티티 Prisma 스키마 in prisma/schema.prisma
 - [ ] T017 [P] Order 엔티티 Prisma 스키마 in prisma/schema.prisma
 - [ ] T018 [P] CategoryMapping 엔티티 Prisma 스키마 in prisma/schema.prisma

@@ -52,24 +52,79 @@ enum UserStatus {
   SUSPENDED
 }
 
-// 상품 모델 (User 관계 추가)
+// 상품 모델 - 완전한 구현 (설계 문서 기반)
 model Product {
-  id          String   @id @default(cuid())
-  userId      String   // 소유자 추가
-  name        String
-  description String?
-  price       Decimal
-  stock       Int      @default(0)
-  sku         String   @unique
-  status      String   @default("ACTIVE") // ACTIVE, INACTIVE, DRAFT
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id     String @id @default(cuid())
+  userId String // 소유자
+
+  // 원본 정보 (JSON 컬럼으로 유연하게 관리)
+  sourceInfo Json // ProductSourceInfo: { sourceUrl, sourcePlatform, sourceProductId, lastCrawledAt }
+
+  // 수집된 원본 데이터 (JSON 컬럼)
+  originalData Json // ProductOriginalData: { title, description, price, images, specifications, category, brand, model, tags }
+
+  // 번역된 데이터 (JSON 컬럼)
+  translatedData Json? // ProductTranslatedData: { title, description, specifications, translatedAt, translationEngine, qualityScore }
+
+  // 판매 설정 (JSON 컬럼)
+  salesSettings Json // ProductSalesSettings: { marginRate, salePrice, minPrice, maxPrice, targetMarkets, autoUpdate }
+
+  // 모니터링 정보 (JSON 컬럼)
+  monitoring Json? // ProductMonitoring: { isActive, lastCheckedAt, priceHistory, stockStatus, alerts }
+
+  // 통계 (JSON 컬럼)
+  statistics Json? // ProductStatistics: { views, clicks, orders, revenue, conversionRate }
+
+  // 상태
+  status ProductStatus @default(DRAFT)
+
+  // 타임스탬프
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // 관계
-  user       User        @relation(fields: [userId], references: [id])
-  orderItems OrderItem[]
+  user            User                 @relation(fields: [userId], references: [id])
+  orderItems      OrderItem[]
+  images          ProductImage[]
+  registrations   ProductRegistration[]
+  categoryMapping CategoryMapping[]
 
   @@map("products")
+}
+
+// 상품 상태 열거형
+enum ProductStatus {
+  DRAFT
+  PROCESSING
+  READY
+  REGISTERED
+  ERROR
+  ARCHIVED
+}
+
+// 소스 플랫폼 열거형
+enum SourcePlatform {
+  TAOBAO
+  AMAZON
+  ALIBABA
+}
+
+// 오픈마켓 플랫폼 열거형
+enum OpenMarketPlatform {
+  ELEVENST  // 11번가
+  GMARKET   // 지마켓
+  AUCTION   // 옥션
+  COUPANG   // 쿠팡
+  NAVER     // 네이버쇼핑
+}
+
+// 등록 상태 열거형
+enum RegistrationStatus {
+  PENDING
+  PROCESSING
+  SUCCESS
+  FAILED
+  UPDATING
 }
 
 // 주문 모델 (기본 구조만)
@@ -120,4 +175,85 @@ model ActivityLog {
   user User @relation(fields: [userId], references: [id])
 
   @@map("activity_logs")
+}
+
+// 상품 이미지 모델 - Product와 연관된 이미지 관리
+model ProductImage {
+  id        String @id @default(cuid())
+  productId String
+
+  // 원본 이미지
+  originalUrl String
+
+  // 처리된 이미지들 (JSON 컬럼)
+  processedImages Json? // ProcessedImageVariant[]: { size, url, width, height, fileSize, format }
+
+  // 메타데이터 (JSON 컬럼)
+  metadata Json? // ImageMetadata: { originalFileName, mimeType, fileSize, dimensions, dominantColors, hasWatermark }
+
+  // 상태
+  status ImageStatus @default(PENDING)
+
+  // 타임스탬프
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // 관계
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@map("product_images")
+}
+
+// 이미지 상태 열거형
+enum ImageStatus {
+  PENDING
+  PROCESSING
+  PROCESSED
+  FAILED
+}
+
+// 상품 등록 정보 모델 - 오픈마켓별 등록 상태 관리
+model ProductRegistration {
+  id                  String             @id @default(cuid())
+  productId           String
+  platform            OpenMarketPlatform
+  platformProductId   String?            // 플랫폼별 상품 ID
+  status              RegistrationStatus @default(PENDING)
+  categoryMapping     String?            // 플랫폼별 카테고리
+  registeredAt        DateTime?
+  lastUpdatedAt       DateTime?
+  errors              Json?              // RegistrationError[]
+
+  // 관계
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  // 유니크 제약조건 - 상품당 플랫폼별로 하나의 등록만 허용
+  @@unique([productId, platform])
+  @@map("product_registrations")
+}
+
+// 카테고리 매핑 모델 - 원본 카테고리와 오픈마켓 카테고리 매핑
+model CategoryMapping {
+  id             String        @id @default(cuid())
+  sourceCategory String        // 원본 카테고리
+  sourcePlatform SourcePlatform
+
+  // 플랫폼별 매핑 (JSON 컬럼)
+  mappings Json // PlatformCategoryMapping[]: { platform, categoryCode, categoryName, path }
+
+  // 메타데이터
+  confidence Int     @default(50) // 매핑 신뢰도 (0-100)
+  isVerified Boolean @default(false) // 수동 검증 여부
+  createdBy  String  // 생성자
+
+  // 타임스탬프
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // 관계 - 여러 Product가 같은 CategoryMapping을 참조할 수 있음
+  products Product[]
+
+  // 유니크 제약조건 - 동일한 소스 카테고리+플랫폼 조합은 하나만
+  @@unique([sourceCategory, sourcePlatform])
+  @@map("category_mappings")
 }

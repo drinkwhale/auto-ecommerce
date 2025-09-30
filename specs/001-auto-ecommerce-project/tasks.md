@@ -86,9 +86,9 @@
 - [x] T038 상품 크롤링 API in src/app/api/v1/products/crawl/route.ts
 
 ### 주문 관리 API
-- [ ] T039 주문 목록 조회 API in src/app/api/v1/orders/route.ts
-- [ ] T040 주문 상세 조회 API in src/app/api/v1/orders/[id]/route.ts
-- [ ] T041 주문 상태 업데이트 API in src/app/api/v1/orders/[id]/route.ts
+- [x] T039 주문 목록 조회 API in src/app/api/v1/orders/route.ts
+- [x] T040 주문 상세 조회 API in src/app/api/v1/orders/[id]/route.ts
+- [x] T041 주문 상태 업데이트 API in src/app/api/v1/orders/[id]/route.ts
 
 ### 통계 및 분석 API
 - [ ] T042 대시보드 통계 API in src/app/api/v1/analytics/dashboard/route.ts

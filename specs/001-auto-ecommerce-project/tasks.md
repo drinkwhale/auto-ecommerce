@@ -75,7 +75,7 @@
 
 ### 인증 관련 API
 - [x] T031 NextAuth.js 설정 및 인증 로직 in src/app/api/auth/[...nextauth]/route.ts
-- [ ] T032 회원가입 API in src/app/api/auth/register/route.ts
+- [x] T032 회원가입 API in src/app/api/auth/register/route.ts
 
 ### 상품 관리 API
 - [ ] T033 상품 목록 조회 API in src/app/api/v1/products/route.ts

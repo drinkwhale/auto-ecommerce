@@ -69,7 +69,7 @@
 
 ### 외부 API 연동 서비스
 - [x] T029 [P] OpenMarketService 오픈마켓 연동 in src/services/openmarket.service.ts
-- [ ] T030 [P] PaymentService 결제 연동 in src/services/payment.service.ts
+- [x] T030 [P] PaymentService 결제 연동 in src/services/payment.service.ts
 
 ## Phase 3.5: API 엔드포인트 구현
 

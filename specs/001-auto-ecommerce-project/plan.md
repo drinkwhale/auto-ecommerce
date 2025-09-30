@@ -252,9 +252,9 @@ ios/ or android/
 
 **Phase E: 오픈마켓 연동** (Phase D 이후)
 ```
-21. [P] 11번가 API 연동
-22. [P] 지마켓 API 연동
-23. [P] 옥션 API 연동
+21. [P] 쿠팡 API 연동
+22. [P] 네이버 스마트스토어 API 연동
+23. [P] 지마켓 API 연동
 24. 카테고리 매핑 시스템
 25. 자동 등록 워크플로우
 ```
@@ -304,8 +304,8 @@ ios/ or android/
 ## Phase 3+: Future Implementation
 *These phases are beyond the scope of the /plan command*
 
-**Phase 3**: Task execution (/tasks command creates tasks.md)  
-**Phase 4**: Implementation (execute tasks.md following constitutional principles)  
+**Phase 3**: Task execution (/tasks command creates tasks.md)
+**Phase 4**: Implementation (execute tasks.md following constitutional principles)
 **Phase 5**: Validation (run tests, execute quickstart.md, performance validation)
 
 ## Complexity Tracking

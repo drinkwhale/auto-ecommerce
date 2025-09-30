@@ -65,7 +65,7 @@
 - [x] T025 [P] OrderService 주문 처리 로직 in src/services/order.service.ts
 - [x] T026 [P] CrawlingService 상품 크롤링 로직 in src/services/crawling.service.ts
 - [x] T027 [P] TranslationService 번역 처리 로직 in src/services/translation.service.ts
-- [ ] T028 [P] ImageProcessingService 이미지 처리 로직 in src/services/image-processing.service.ts
+- [x] T028 [P] ImageProcessingService 이미지 처리 로직 in src/services/image-processing.service.ts
 
 ### 외부 API 연동 서비스
 - [ ] T029 [P] OpenMarketService 오픈마켓 연동 in src/services/openmarket.service.ts

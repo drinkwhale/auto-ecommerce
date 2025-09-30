@@ -63,7 +63,7 @@
 - [x] T023 [P] UserService 사용자 관리 로직 in src/services/user.service.ts
 - [x] T024 [P] ProductService 상품 관리 로직 in src/services/product.service.ts
 - [x] T025 [P] OrderService 주문 처리 로직 in src/services/order.service.ts
-- [ ] T026 [P] CrawlingService 상품 크롤링 로직 in src/services/crawling.service.ts
+- [x] T026 [P] CrawlingService 상품 크롤링 로직 in src/services/crawling.service.ts
 - [ ] T027 [P] TranslationService 번역 처리 로직 in src/services/translation.service.ts
 - [ ] T028 [P] ImageProcessingService 이미지 처리 로직 in src/services/image-processing.service.ts
 

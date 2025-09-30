@@ -91,7 +91,7 @@
 - [x] T041 주문 상태 업데이트 API in src/app/api/v1/orders/[id]/route.ts
 
 ### 통계 및 분석 API
-- [ ] T042 대시보드 통계 API in src/app/api/v1/analytics/dashboard/route.ts
+- [x] T042 대시보드 통계 API in src/app/api/v1/analytics/dashboard/route.ts
 
 ### GraphQL 엔드포인트
 - [ ] T043 GraphQL 서버 설정 및 리졸버 구현 in src/app/api/graphql/route.ts

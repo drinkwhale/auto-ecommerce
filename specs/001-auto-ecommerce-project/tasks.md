@@ -61,7 +61,7 @@
 
 ### 핵심 비즈니스 로직
 - [x] T023 [P] UserService 사용자 관리 로직 in src/services/user.service.ts
-- [ ] T024 [P] ProductService 상품 관리 로직 in src/services/product.service.ts
+- [x] T024 [P] ProductService 상품 관리 로직 in src/services/product.service.ts
 - [ ] T025 [P] OrderService 주문 처리 로직 in src/services/order.service.ts
 - [ ] T026 [P] CrawlingService 상품 크롤링 로직 in src/services/crawling.service.ts
 - [ ] T027 [P] TranslationService 번역 처리 로직 in src/services/translation.service.ts

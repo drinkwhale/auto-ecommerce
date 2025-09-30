@@ -94,7 +94,7 @@
 - [x] T042 대시보드 통계 API in src/app/api/v1/analytics/dashboard/route.ts
 
 ### GraphQL 엔드포인트
-- [ ] T043 GraphQL 서버 설정 및 리졸버 구현 in src/app/api/graphql/route.ts
+- [x] T043 GraphQL 서버 설정 및 리졸버 구현 in src/app/api/graphql/route.ts
 
 ## Phase 3.6: 프론트엔드 컴포넌트
 

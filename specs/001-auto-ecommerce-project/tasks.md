@@ -101,7 +101,7 @@
 ### shadcn/ui 기반 공통 컴포넌트
 - [x] T044 [P] Header 및 Navigation 컴포넌트 in src/components/common/Header.tsx
 - [x] T045 [P] Sidebar 컴포넌트 in src/components/common/Sidebar.tsx
-- [ ] T046 [P] DataTable 컴포넌트 in src/components/common/DataTable.tsx
+- [x] T046 [P] DataTable 컴포넌트 in src/components/common/DataTable.tsx
 
 ### 상품 관련 컴포넌트
 - [ ] T047 [P] ProductList 컴포넌트 in src/components/product/ProductList.tsx

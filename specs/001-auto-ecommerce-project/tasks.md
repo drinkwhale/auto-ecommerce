@@ -99,7 +99,7 @@
 ## Phase 3.6: 프론트엔드 컴포넌트
 
 ### shadcn/ui 기반 공통 컴포넌트
-- [ ] T044 [P] Header 및 Navigation 컴포넌트 in src/components/common/Header.tsx
+- [x] T044 [P] Header 및 Navigation 컴포넌트 in src/components/common/Header.tsx
 - [ ] T045 [P] Sidebar 컴포넌트 in src/components/common/Sidebar.tsx
 - [ ] T046 [P] DataTable 컴포넌트 in src/components/common/DataTable.tsx
 

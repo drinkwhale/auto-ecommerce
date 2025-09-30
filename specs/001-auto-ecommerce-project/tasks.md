@@ -78,8 +78,8 @@
 - [x] T032 회원가입 API in src/app/api/auth/register/route.ts
 
 ### 상품 관리 API
-- [ ] T033 상품 목록 조회 API in src/app/api/v1/products/route.ts
-- [ ] T034 상품 생성 API in src/app/api/v1/products/route.ts
+- [x] T033 상품 목록 조회 API in src/app/api/v1/products/route.ts
+- [x] T034 상품 생성 API in src/app/api/v1/products/route.ts
 - [ ] T035 상품 상세 조회 API in src/app/api/v1/products/[id]/route.ts
 - [ ] T036 상품 수정 API in src/app/api/v1/products/[id]/route.ts
 - [ ] T037 상품 삭제 API in src/app/api/v1/products/[id]/route.ts

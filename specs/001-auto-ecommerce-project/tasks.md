@@ -83,7 +83,7 @@
 - [x] T035 상품 상세 조회 API in src/app/api/v1/products/[id]/route.ts
 - [x] T036 상품 수정 API in src/app/api/v1/products/[id]/route.ts
 - [x] T037 상품 삭제 API in src/app/api/v1/products/[id]/route.ts
-- [ ] T038 상품 크롤링 API in src/app/api/v1/products/crawl/route.ts
+- [x] T038 상품 크롤링 API in src/app/api/v1/products/crawl/route.ts
 
 ### 주문 관리 API
 - [ ] T039 주문 목록 조회 API in src/app/api/v1/orders/route.ts

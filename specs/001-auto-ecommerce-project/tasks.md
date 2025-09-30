@@ -74,7 +74,7 @@
 ## Phase 3.5: API 엔드포인트 구현
 
 ### 인증 관련 API
-- [ ] T031 NextAuth.js 설정 및 인증 로직 in src/app/api/auth/[...nextauth]/route.ts
+- [x] T031 NextAuth.js 설정 및 인증 로직 in src/app/api/auth/[...nextauth]/route.ts
 - [ ] T032 회원가입 API in src/app/api/auth/register/route.ts
 
 ### 상품 관리 API

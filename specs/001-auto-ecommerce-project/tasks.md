@@ -122,8 +122,8 @@
 - [x] T056 통계 페이지 in src/app/analytics/page.tsx
 
 ### 인증 페이지
-- [ ] T057 [P] 로그인 페이지 in src/app/auth/login/page.tsx
-- [ ] T058 [P] 회원가입 페이지 in src/app/auth/register/page.tsx
+- [x] T057 [P] 로그인 페이지 in src/app/auth/login/page.tsx
+- [x] T058 [P] 회원가입 페이지 in src/app/auth/register/page.tsx
 
 ## Phase 3.8: 통합 및 미들웨어
 

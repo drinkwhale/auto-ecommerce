@@ -210,6 +210,10 @@ npm run lint
 ## 7. 중요 규칙 및 제약사항 (Rules & Constraints)
 
 ### 개발 규칙
+- **Git 브랜치 필수**: 소스 코드를 수정하거나 새 파일을 추가할 때는 반드시 Git 브랜치를 먼저 생성한 후 작업을 시작할 것
+  - 브랜치 생성 명령: `git checkout -b feature/[작업명]`
+  - 예: `git checkout -b feature/product-search-ui`
+  - main, develop 브랜치에 직접 작업 절대 금지
 - **TDD 엄수**: 모든 기능은 테스트 작성 → 실패 확인 → 구현 → 통과 순서로 개발
 - **타입 안정성**: 모든 함수와 변수는 명시적 TypeScript 타입 지정
 - **에러 처리**: 모든 비동기 함수는 try-catch 블록으로 에러 처리 필수

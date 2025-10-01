@@ -119,7 +119,7 @@
 - [x] T053 상품 관리 페이지 in src/app/products/page.tsx
 - [x] T054 상품 상세/편집 페이지 in src/app/products/[id]/page.tsx
 - [x] T055 주문 관리 페이지 in src/app/orders/page.tsx
-- [ ] T056 통계 페이지 in src/app/analytics/page.tsx
+- [x] T056 통계 페이지 in src/app/analytics/page.tsx
 
 ### 인증 페이지
 - [ ] T057 [P] 로그인 페이지 in src/app/auth/login/page.tsx

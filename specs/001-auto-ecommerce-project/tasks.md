@@ -129,15 +129,15 @@
 
 ### 인증 및 보안
 - [x] T059 NextAuth.js 미들웨어 설정 in middleware.ts
-- [ ] T060 CORS 및 보안 헤더 설정 in src/lib/cors.ts
+- [x] T060 CORS 및 보안 헤더 설정 in src/lib/cors.ts
 
 ### 상태 관리 및 API 클라이언트
-- [ ] T061 React Query 설정 in src/lib/react-query.ts
-- [ ] T062 [P] API 클라이언트 설정 in src/lib/api-client.ts
+- [x] T061 React Query 설정 in src/lib/react-query.ts
+- [x] T062 [P] API 클라이언트 설정 in src/lib/api-client.ts
 
 ### 크론 작업 및 백그라운드 처리
-- [ ] T063 [P] 가격 모니터링 크론 작업 in src/lib/cron/price-monitor.ts
-- [ ] T064 [P] 자동 번역 큐 처리기 in src/lib/queue/translation-queue.ts
+- [x] T063 [P] 가격 모니터링 크론 작업 in src/lib/cron/price-monitor.ts
+- [x] T064 [P] 자동 번역 큐 처리기 in src/lib/queue/translation-queue.ts
 
 ## Phase 3.9: 성능 최적화 및 마무리
 

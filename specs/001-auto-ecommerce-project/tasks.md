@@ -115,7 +115,7 @@
 ## Phase 3.7: 페이지 구현
 
 ### 메인 페이지
-- [ ] T052 대시보드 페이지 in src/app/dashboard/page.tsx
+- [x] T052 대시보드 페이지 in src/app/dashboard/page.tsx
 - [ ] T053 상품 관리 페이지 in src/app/products/page.tsx
 - [ ] T054 상품 상세/편집 페이지 in src/app/products/[id]/page.tsx
 - [ ] T055 주문 관리 페이지 in src/app/orders/page.tsx

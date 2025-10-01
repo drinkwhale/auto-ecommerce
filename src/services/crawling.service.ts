@@ -841,7 +841,7 @@ class CrawlingService {
           amount: basePrice,
           currency: this.getCurrency(platform),
         },
-        imageUrl: `https://via.placeholder.com/300x300?text=Product+${productIndex}`,
+        imageUrl: this.generateMockImage(query, productIndex),
         sourceUrl: this.generateMockUrl(platform, productIndex),
         salesCount,
         rating: parseFloat(rating),

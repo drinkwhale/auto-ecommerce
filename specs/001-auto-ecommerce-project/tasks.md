@@ -104,13 +104,13 @@
 - [x] T046 [P] DataTable 컴포넌트 in src/components/common/DataTable.tsx
 
 ### 상품 관련 컴포넌트
-- [ ] T047 [P] ProductList 컴포넌트 in src/components/product/ProductList.tsx
-- [ ] T048 [P] ProductForm 컴포넌트 in src/components/product/ProductForm.tsx
-- [ ] T049 [P] ProductCard 컴포넌트 in src/components/product/ProductCard.tsx
+- [x] T047 [P] ProductList 컴포넌트 in src/components/product/ProductList.tsx
+- [x] T048 [P] ProductForm 컴포넌트 in src/components/product/ProductForm.tsx
+- [x] T049 [P] ProductCard 컴포넌트 in src/components/product/ProductCard.tsx
 
 ### 주문 관련 컴포넌트
-- [ ] T050 [P] OrderList 컴포넌트 in src/components/order/OrderList.tsx
-- [ ] T051 [P] OrderDetail 컴포넌트 in src/components/order/OrderDetail.tsx
+- [x] T050 [P] OrderList 컴포넌트 in src/components/order/OrderList.tsx
+- [x] T051 [P] OrderDetail 컴포넌트 in src/components/order/OrderDetail.tsx
 
 ## Phase 3.7: 페이지 구현
 

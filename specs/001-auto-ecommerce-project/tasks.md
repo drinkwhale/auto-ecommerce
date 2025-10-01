@@ -128,7 +128,7 @@
 ## Phase 3.8: 통합 및 미들웨어
 
 ### 인증 및 보안
-- [ ] T059 NextAuth.js 미들웨어 설정 in middleware.ts
+- [x] T059 NextAuth.js 미들웨어 설정 in middleware.ts
 - [ ] T060 CORS 및 보안 헤더 설정 in src/lib/cors.ts
 
 ### 상태 관리 및 API 클라이언트

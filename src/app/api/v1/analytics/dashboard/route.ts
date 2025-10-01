@@ -103,16 +103,16 @@ export async function GET(request: NextRequest) {
       Array<{ date: string; revenue: number; orders: number }>
     >`
       SELECT
-        DATE(created_at) as date,
+        DATE("createdAt") as date,
         COUNT(*) as orders,
         COALESCE(SUM(CAST(payment->>'netProfit' AS DECIMAL)), 0) as revenue
       FROM orders
       WHERE
-        user_id = ${userId}
+        "userId" = ${userId}
         AND status = 'DELIVERED'
-        AND created_at >= ${startDate}
-      GROUP BY DATE(created_at)
-      ORDER BY DATE(created_at) ASC
+        AND "createdAt" >= ${startDate}
+      GROUP BY DATE("createdAt")
+      ORDER BY DATE("createdAt") ASC
     `;
 
     // 5. 최근 활동 로그

@@ -881,6 +881,46 @@ class TranslationService {
       averageQuality: avgQuality,
     };
   }
+
+  /**
+   * 플랫폼별 자동 번역 (한국어 → 플랫폼 언어)
+   * 한국어 검색어를 각 소스 플랫폼의 언어로 자동 변환
+   */
+  async translateForPlatform(
+    koreanText: string,
+    platform: 'TAOBAO' | 'AMAZON' | 'ALIBABA' | 'COUPANG' | 'GMARKET' | 'STREET11' | 'OTHER'
+  ): Promise<string> {
+    // 플랫폼별 타겟 언어 매핑
+    const platformLanguageMap: Record<string, LanguageCode> = {
+      TAOBAO: LanguageCode.ZH,    // 중국어
+      AMAZON: LanguageCode.EN,     // 영어
+      ALIBABA: LanguageCode.EN,    // 영어
+      COUPANG: LanguageCode.KO,    // 한국어 (번역 불필요)
+      GMARKET: LanguageCode.KO,    // 한국어 (번역 불필요)
+      STREET11: LanguageCode.KO,   // 한국어 (번역 불필요)
+      OTHER: LanguageCode.EN,      // 영어 (기본값)
+    };
+
+    const targetLang = platformLanguageMap[platform];
+
+    // 한국어 플랫폼이면 그대로 반환
+    if (targetLang === LanguageCode.KO) {
+      return koreanText;
+    }
+
+    // 한국어 → 타겟 언어 번역
+    const result = await this.translate({
+      text: koreanText,
+      sourceLang: LanguageCode.KO,
+      targetLang,
+      options: {
+        useCache: true,
+        useDictionary: false, // 검색어는 사전 적용 안 함
+      },
+    });
+
+    return result.translatedText;
+  }
 }
 
 // 싱글톤 인스턴스 내보내기

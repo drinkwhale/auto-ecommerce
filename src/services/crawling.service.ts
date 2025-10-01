@@ -789,6 +789,113 @@ class CrawlingService {
       byStatus,
     };
   }
+
+  /**
+   * 상품 검색 (플랫폼별)
+   * 실제 구현에서는 각 플랫폼의 검색 API를 사용해야 하지만,
+   * 현재는 시뮬레이션 데이터를 반환합니다.
+   */
+  async searchProducts(input: {
+    query: string;
+    platform: SourcePlatform;
+    page?: number;
+    limit?: number;
+    sortBy?: 'relevance' | 'sales' | 'price_asc' | 'price_desc';
+  }) {
+    const { query, platform, page = 1, limit = 20, sortBy = 'sales' } = input;
+
+    // 실제 구현에서는 플랫폼별 API 호출
+    // 여기서는 시뮬레이션 데이터 생성
+    const mockResults = this.generateMockSearchResults(query, platform, page, limit, sortBy);
+
+    return mockResults;
+  }
+
+  /**
+   * 목 검색 결과 생성 (개발용)
+   * 실제 배포 시에는 각 플랫폼의 실제 API로 교체
+   */
+  private generateMockSearchResults(
+    query: string,
+    platform: SourcePlatform,
+    page: number,
+    limit: number,
+    sortBy: string
+  ) {
+    // 시뮬레이션 상품 데이터
+    const mockProducts = [];
+    const totalResults = 100; // 가상 전체 결과 수
+
+    for (let i = 0; i < limit; i++) {
+      const productIndex = (page - 1) * limit + i + 1;
+      if (productIndex > totalResults) break;
+
+      const basePrice = Math.floor(Math.random() * 100000) + 10000;
+      const salesCount = Math.floor(Math.random() * 10000);
+      const rating = (Math.random() * 2 + 3).toFixed(1); // 3.0 ~ 5.0
+
+      mockProducts.push({
+        id: `${platform.toLowerCase()}_${productIndex}`,
+        title: `${query} - 상품 ${productIndex}`,
+        price: {
+          amount: basePrice,
+          currency: this.getCurrency(platform),
+        },
+        imageUrl: `https://via.placeholder.com/300x300?text=Product+${productIndex}`,
+        sourceUrl: this.generateMockUrl(platform, productIndex),
+        salesCount,
+        rating: parseFloat(rating),
+        reviewCount: Math.floor(salesCount * 0.1),
+        seller: {
+          name: `판매자 ${productIndex % 10 + 1}`,
+          rating: parseFloat((Math.random() * 0.5 + 4.5).toFixed(1)),
+        },
+        shipping: {
+          isFree: Math.random() > 0.3,
+          estimatedDays: Math.floor(Math.random() * 5) + 3,
+        },
+      });
+    }
+
+    // 정렬 적용
+    if (sortBy === 'sales') {
+      mockProducts.sort((a, b) => b.salesCount - a.salesCount);
+    } else if (sortBy === 'price_asc') {
+      mockProducts.sort((a, b) => a.price.amount - b.price.amount);
+    } else if (sortBy === 'price_desc') {
+      mockProducts.sort((a, b) => b.price.amount - a.price.amount);
+    }
+
+    return {
+      query,
+      platform,
+      results: mockProducts,
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(totalResults / limit),
+        totalResults,
+        pageSize: limit,
+      },
+      sortBy,
+    };
+  }
+
+  /**
+   * 플랫폼별 목 URL 생성
+   */
+  private generateMockUrl(platform: SourcePlatform, productId: number): string {
+    const urlMap: Record<SourcePlatform, string> = {
+      [SourcePlatform.TAOBAO]: `https://item.taobao.com/item.htm?id=${productId}`,
+      [SourcePlatform.AMAZON]: `https://www.amazon.com/dp/B${String(productId).padStart(9, '0')}`,
+      [SourcePlatform.ALIBABA]: `https://www.alibaba.com/product-detail/${productId}.html`,
+      [SourcePlatform.COUPANG]: `https://www.coupang.com/vp/products/${productId}`,
+      [SourcePlatform.GMARKET]: `https://item.gmarket.co.kr/Item?goodscode=${productId}`,
+      [SourcePlatform.STREET11]: `https://www.11st.co.kr/products/${productId}`,
+      [SourcePlatform.OTHER]: `https://example.com/product/${productId}`,
+    };
+
+    return urlMap[platform];
+  }
 }
 
 // 싱글톤 인스턴스 내보내기

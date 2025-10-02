@@ -36,6 +36,7 @@ const sidebarItems: SidebarItem[] = [
     children: [
       { label: '상품 목록', href: '/products', icon: '📋' },
       { label: '상품 등록', href: '/products/new', icon: '➕' },
+      { label: '상품 검색', href: '/search', icon: '🔎' },
       { label: '크롤링', href: '/products/crawl', icon: '🔍' },
     ],
   },

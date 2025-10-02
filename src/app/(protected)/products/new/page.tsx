@@ -46,12 +46,32 @@ export default function ProductNewPage() {
       setSubmitting(true);
       setError(null);
 
+      // API가 기대하는 형식으로 데이터 변환
+      const requestBody = {
+        sourceInfo: {
+          sourceUrl: formData.sourceUrl,
+          sourcePlatform: formData.sourcePlatform,
+        },
+        originalData: {
+          title: formData.title,
+          description: formData.description,
+          price: formData.price,
+          images: formData.images,
+        },
+        salesSettings: {
+          marginRate: formData.marginRate,
+          salePrice: formData.salePrice,
+          targetMarkets: formData.targetMarkets,
+          autoUpdate: true,
+        },
+      };
+
       const response = await fetch('/api/v1/products', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(requestBody),
       });
 
       const result = await response.json();

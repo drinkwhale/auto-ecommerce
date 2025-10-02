@@ -196,7 +196,7 @@ export async function POST(request: NextRequest) {
         {
           success: false,
           error: '입력 데이터가 유효하지 않습니다.',
-          details: validationResult.error.errors.map((err) => ({
+          details: validationResult.error.issues.map((err) => ({
             field: err.path.join('.'),
             message: err.message,
           })),

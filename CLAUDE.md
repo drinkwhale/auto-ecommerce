@@ -435,7 +435,6 @@ git branch -d feature/T047-product-list-component
 **Step 5: 커밋**
 ```bash
 git add specs/001-auto-ecommerce-project/tests.md
-git add .playwright-mcp/*.png
 git commit -m "test: {테스트명} Playwright 테스트 결과 추가
 
 - 테스트 시나리오 추가: {간단한 설명}

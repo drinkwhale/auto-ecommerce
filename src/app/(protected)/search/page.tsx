@@ -17,14 +17,11 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { SourcePlatform } from '@prisma/client';
 
-// 플랫폼 옵션
+// 플랫폼 옵션 (소스 플랫폼만 포함)
 const PLATFORM_OPTIONS = [
   { value: SourcePlatform.TAOBAO, label: '타오바오', icon: '🛒' },
   { value: SourcePlatform.ALIBABA, label: '알리바바', icon: '📦' },
   { value: SourcePlatform.AMAZON, label: '아마존', icon: '🌐' },
-  { value: SourcePlatform.COUPANG, label: '쿠팡', icon: '🚚' },
-  { value: SourcePlatform.GMARKET, label: '지마켓', icon: '🏪' },
-  { value: SourcePlatform.STREET11, label: '11번가', icon: '🏬' },
 ];
 
 // 정렬 옵션
@@ -162,13 +159,13 @@ export default function SearchPage() {
           <label className="block text-sm font-medium text-gray-700 mb-2">
             소스 플랫폼
           </label>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
+          <div className="grid grid-cols-3 gap-4">
             {PLATFORM_OPTIONS.map((platform) => (
               <button
                 key={platform.value}
                 onClick={() => setSelectedPlatform(platform.value)}
                 className={`
-                  p-3 rounded-lg border-2 transition-all
+                  p-4 rounded-lg border-2 transition-all
                   ${
                     selectedPlatform === platform.value
                       ? 'border-blue-500 bg-blue-50 text-blue-700'
@@ -176,8 +173,8 @@ export default function SearchPage() {
                   }
                 `}
               >
-                <div className="text-2xl mb-1">{platform.icon}</div>
-                <div className="text-sm font-medium">{platform.label}</div>
+                <div className="text-3xl mb-2">{platform.icon}</div>
+                <div className="text-base font-medium">{platform.label}</div>
               </button>
             ))}
           </div>

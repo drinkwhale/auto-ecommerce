@@ -173,9 +173,9 @@ function getTargetLanguage(platform: SourcePlatform): LanguageCode {
     [SourcePlatform.TAOBAO]: LanguageCode.ZH,
     [SourcePlatform.ALIBABA]: LanguageCode.ZH,
     [SourcePlatform.AMAZON]: LanguageCode.EN,
-    [SourcePlatform.COUPANG]: LanguageCode.KO,
-    [SourcePlatform.GMARKET]: LanguageCode.KO,
-    [SourcePlatform.STREET11]: LanguageCode.KO,
+    [SourcePlatform.COUPANG]: LanguageCode.KO, // 판매 플랫폼 (검색 미지원)
+    [SourcePlatform.GMARKET]: LanguageCode.KO, // 판매 플랫폼 (검색 미지원)
+    [SourcePlatform.STREET11]: LanguageCode.KO, // 판매 플랫폼 (검색 미지원)
     [SourcePlatform.OTHER]: LanguageCode.EN,
   };
 

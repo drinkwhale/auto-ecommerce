@@ -126,10 +126,6 @@ export default function ProductsPage() {
   };
 
   const handleDelete = async (ids: string[]) => {
-    if (!confirm(`선택한 ${ids.length}개의 상품을 삭제하시겠습니까?`)) {
-      return;
-    }
-
     try {
       setLoading(true);
       const promises = ids.map((id) =>

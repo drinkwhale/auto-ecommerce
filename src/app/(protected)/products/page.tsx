@@ -69,6 +69,7 @@ export default function ProductsPage() {
   const [statusFilter, setStatusFilter] = useState(searchParams.get('status') || 'all');
   const [sortBy, setSortBy] = useState(searchParams.get('sortBy') || 'createdAt');
   const [sortOrder, setSortOrder] = useState(searchParams.get('sortOrder') || 'desc');
+  const [includeArchived, setIncludeArchived] = useState(false);
 
   // 인증 확인
   useEffect(() => {
@@ -82,7 +83,7 @@ export default function ProductsPage() {
     if (status === 'authenticated') {
       fetchProducts();
     }
-  }, [status, searchQuery, statusFilter, sortBy, sortOrder, pagination.page]);
+  }, [status, searchQuery, statusFilter, sortBy, sortOrder, pagination.page, includeArchived]);
 
   const fetchProducts = async () => {
     try {
@@ -96,6 +97,7 @@ export default function ProductsPage() {
         ...(statusFilter !== 'all' && { status: statusFilter }),
         sortBy,
         sortOrder,
+        ...(includeArchived && { includeArchived: 'true' }),
       });
 
       const response = await fetch(`/api/v1/products?${params}`);
@@ -131,6 +133,7 @@ export default function ProductsPage() {
     }
 
     try {
+      setLoading(true);
       const promises = ids.map((id) =>
         fetch(`/api/v1/products/${id}`, {
           method: 'DELETE',
@@ -142,13 +145,17 @@ export default function ProductsPage() {
 
       if (allSuccess) {
         alert('상품이 삭제되었습니다.');
-        fetchProducts();
+        // 삭제 후 목록 새로고침
+        await fetchProducts();
       } else {
         alert('일부 상품 삭제에 실패했습니다.');
+        await fetchProducts();
       }
     } catch (err) {
       alert('상품 삭제 중 오류가 발생했습니다.');
       console.error('Delete error:', err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -194,67 +201,89 @@ export default function ProductsPage() {
           </div>
 
           {/* 검색 및 필터 */}
-          <div className="mt-6 grid grid-cols-1 md:grid-cols-4 gap-4">
-            {/* 검색 */}
-            <form onSubmit={handleSearch} className="md:col-span-2">
-              <div className="relative">
-                <input
-                  type="text"
-                  placeholder="상품 제목 또는 ID로 검색..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                />
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <span className="text-gray-400">🔍</span>
+          <div className="mt-6 space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              {/* 검색 */}
+              <form onSubmit={handleSearch} className="md:col-span-2">
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="상품 제목 또는 ID로 검색..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                  />
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <span className="text-gray-400">🔍</span>
+                  </div>
+                  <button
+                    type="submit"
+                    className="absolute inset-y-0 right-0 px-4 text-sm font-medium text-blue-600 hover:text-blue-700"
+                  >
+                    검색
+                  </button>
                 </div>
-                <button
-                  type="submit"
-                  className="absolute inset-y-0 right-0 px-4 text-sm font-medium text-blue-600 hover:text-blue-700"
-                >
-                  검색
-                </button>
-              </div>
-            </form>
+              </form>
 
-            {/* 상태 필터 */}
-            <div>
-              <select
-                value={statusFilter}
-                onChange={(e) => {
-                  setStatusFilter(e.target.value);
-                  setPagination((prev) => ({ ...prev, page: 1 }));
-                }}
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="all">전체 상태</option>
-                <option value="DRAFT">초안</option>
-                <option value="PROCESSING">처리중</option>
-                <option value="READY">준비완료</option>
-                <option value="REGISTERED">등록완료</option>
-                <option value="ERROR">오류</option>
-                <option value="ARCHIVED">보관됨</option>
-              </select>
+              {/* 상태 필터 */}
+              <div>
+                <select
+                  value={statusFilter}
+                  onChange={(e) => {
+                    setStatusFilter(e.target.value);
+                    setPagination((prev) => ({ ...prev, page: 1 }));
+                  }}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="all">전체 상태</option>
+                  <option value="DRAFT">초안</option>
+                  <option value="PROCESSING">처리중</option>
+                  <option value="READY">준비완료</option>
+                  <option value="REGISTERED">등록완료</option>
+                  <option value="ERROR">오류</option>
+                  <option value="ARCHIVED">보관됨</option>
+                </select>
+              </div>
+
+              {/* 정렬 */}
+              <div>
+                <select
+                  value={`${sortBy}-${sortOrder}`}
+                  onChange={(e) => {
+                    const [field, order] = e.target.value.split('-');
+                    setSortBy(field);
+                    setSortOrder(order);
+                  }}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="createdAt-desc">최신순</option>
+                  <option value="createdAt-asc">오래된순</option>
+                  <option value="salesSettings.salePrice-desc">가격 높은순</option>
+                  <option value="salesSettings.salePrice-asc">가격 낮은순</option>
+                  <option value="statistics.views-desc">조회수순</option>
+                  <option value="statistics.orders-desc">주문수순</option>
+                </select>
+              </div>
             </div>
 
-            {/* 정렬 */}
-            <div>
-              <select
-                value={`${sortBy}-${sortOrder}`}
+            {/* 보관된 상품 포함 체크박스 */}
+            <div className="flex items-center">
+              <input
+                id="includeArchived"
+                type="checkbox"
+                checked={includeArchived}
                 onChange={(e) => {
-                  const [field, order] = e.target.value.split('-');
-                  setSortBy(field);
-                  setSortOrder(order);
+                  setIncludeArchived(e.target.checked);
+                  setPagination((prev) => ({ ...prev, page: 1 }));
                 }}
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              />
+              <label
+                htmlFor="includeArchived"
+                className="ml-2 text-sm text-gray-700"
               >
-                <option value="createdAt-desc">최신순</option>
-                <option value="createdAt-asc">오래된순</option>
-                <option value="salesSettings.salePrice-desc">가격 높은순</option>
-                <option value="salesSettings.salePrice-asc">가격 낮은순</option>
-                <option value="statistics.views-desc">조회수순</option>
-                <option value="statistics.orders-desc">주문수순</option>
-              </select>
+                보관된 상품 포함
+              </label>
             </div>
           </div>
 

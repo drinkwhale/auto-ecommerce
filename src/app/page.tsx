@@ -12,16 +12,16 @@ export default function HomePage() {
         </p>
         <div className="space-x-4">
           <Link
-            href="/dashboard"
+            href="/auth/login"
             className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
           >
-            대시보드 시작
+            로그인
           </Link>
           <Link
-            href="/products"
+            href="/auth/register"
             className="inline-flex items-center px-6 py-3 border border-gray-300 text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
           >
-            상품 관리
+            회원가입
           </Link>
         </div>
       </div>

@@ -295,11 +295,11 @@ npm run lint
 
 ### 브랜치 전략
 - **main**: 프로덕션 배포 브랜치 (항상 안정적인 상태 유지)
-- **develop**: 개발 통합 브랜치 (다음 릴리스 준비)
 - **feature/[작업명]**: 기능 개발 브랜치
   - 예: `feature/T047-T051-product-order-components`
   - 예: `feature/product-crawling-service`
-- **bugfix/[버그명]**: 버그 수정 브랜치
+- **fix/[버그명]**: 버그 수정 브랜치
+  - 예: `fix/product-create-validation-error`
 - **hotfix/[긴급수정명]**: 프로덕션 긴급 수정
 
 ### 커밋 메시지 규칙
@@ -336,27 +336,21 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 
 ### 작업 플로우
 ```bash
-# 1. 최신 코드 가져오기
-git checkout develop
-git pull origin develop
-
-# 2. 기능 브랜치 생성
+# 1. 기능 브랜치 생성
 git checkout -b feature/T047-product-list-component
 
-# 3. 작업 후 커밋
+# 2. 작업 후 커밋
 git add .
 git commit -m "feat: T047 ProductList 컴포넌트 구현"
 
-# 4. 원격 저장소에 푸시
+# 3. 원격 저장소에 푸시
 git push origin feature/T047-product-list-component
 
-# 5. Pull Request 생성 (GitHub)
-- develop 브랜치로 병합 요청
+# 4. Pull Request 생성 (GitHub)
+- main 브랜치로 병합 요청
 - 코드 리뷰 후 승인되면 Squash and Merge
 
-# 6. 병합 후 로컬 브랜치 정리
-git checkout develop
-git pull origin develop
+# 5. 병합 후 로컬 브랜치 정리
 git branch -d feature/T047-product-list-component
 ```
 
@@ -371,8 +365,8 @@ git branch -d feature/T047-product-list-component
 - **머지 방식**: Squash and Merge (커밋 히스토리 정리)
 
 ### 금지 사항
-- ❌ main 브랜치에 직접 커밋 금지
-- ❌ develop 브랜치에 직접 커밋 금지 (PR 필수)
+- ❌ main 브랜치에 직접 커밋 금지 (PR 필수)
+- ❌ 로컬에서 main 브랜치로 merge 금지 (GitHub에서 PR을 통해서만 병합)
 - ❌ `git push --force` 사용 금지 (공유 브랜치)
 - ❌ 민감한 정보(.env, API 키) 커밋 금지
 - ❌ node_modules, .next 등 빌드 파일 커밋 금지 (.gitignore 확인)

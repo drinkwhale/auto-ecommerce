@@ -444,13 +444,20 @@ export default function DashboardPage() {
         </div>
 
         {/* 빠른 액션 */}
-        <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <Link
             href="/products/new"
             className="flex items-center justify-center gap-2 bg-blue-600 text-white rounded-lg p-4 hover:bg-blue-700 transition"
           >
             <span className="text-2xl">➕</span>
             <span className="font-medium">상품 등록</span>
+          </Link>
+          <Link
+            href="/search"
+            className="flex items-center justify-center gap-2 bg-orange-600 text-white rounded-lg p-4 hover:bg-orange-700 transition"
+          >
+            <span className="text-2xl">🔎</span>
+            <span className="font-medium">상품 검색</span>
           </Link>
           <Link
             href="/products/crawl"

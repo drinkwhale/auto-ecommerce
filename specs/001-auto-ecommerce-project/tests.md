@@ -207,9 +207,43 @@
 **스크린샷:**
 - `products-new-page-fixed.png`: 수정 후 정상 화면
 
-##### 7-3. 상품 크롤링 버튼
-**테스트:** 미수행 (페이지 존재 여부만 확인)
-- `/products/crawl` 라우트 존재 확인
+##### 7-3. 상품 크롤링 버튼 (오류 발견 및 수정)
+**테스트 단계:**
+1. 대시보드로 복귀
+2. "🔍 상품 크롤링" 버튼 클릭
+3. 페이지 확인
+
+**최초 결과:** ❌ 실패
+- 에러 메시지: "URL 파라미터가 필요합니다."
+- 페이지가 존재하지 않음
+
+**스크린샷:**
+- `crawl-error-no-page.png`: 오류 화면
+
+**문제 원인:**
+- `/products/crawl` 페이지 파일(`src/app/products/crawl/page.tsx`)이 누락됨
+- 대시보드 링크는 `/products/crawl`로 연결되어 있으나 페이지가 없어 오류 발생
+
+**해결 방법:**
+- `src/app/products/crawl/page.tsx` 파일 생성
+- URL 입력 및 플랫폼 자동 감지 UI 구현
+- 크롤링 옵션 설정 기능 추가 (자동 번역, 이미지 처리, 마진율)
+- URL 미리보기 및 중복 확인 기능 구현
+- 사용 방법 안내 섹션 추가
+
+**수정 후 결과:** ✅ 성공
+- 상품 크롤링 페이지 정상 로드
+- URL 입력 필드 및 "URL 확인" 버튼 표시
+- 크롤링 옵션 (자동 번역, 이미지 처리, 마진율 슬라이더) 정상 표시
+- 사용 방법 안내 섹션 정상 표시
+
+**스크린샷:**
+- `crawl-page-loaded.png`: 수정 후 정상 화면
+
+**참고사항:**
+- ⚠️ 전체 기능 테스트는 PostgreSQL 데이터베이스 실행 필요
+- 현재 테스트에서는 UI 렌더링 및 기본 인터랙션만 확인
+- 데이터베이스 미연결 시 적절한 에러 메시지 표시 확인
 
 ---
 
@@ -269,6 +303,75 @@ fix: 대시보드 빠른 액션 버튼 오류 수정 및 Playwright 테스트 �
 
 ---
 
+### Issue #2: 상품 크롤링 페이지 누락
+
+**발견 일시:** 2025-10-02
+
+**증상:**
+- 대시보드의 "상품 크롤링" 버튼 클릭 시 "URL 파라미터가 필요합니다" 에러 발생
+- `/products/crawl` URL 접근 불가
+- 페이지가 존재하지 않음
+
+**원인 분석:**
+- Next.js App Router에서 `/products/crawl` 페이지 파일이 생성되지 않음
+- 대시보드 링크: `/products/crawl`로 설정되어 있으나 해당 라우트 파일 누락
+- Phase 3.7 작업 시 상품 크롤링 페이지 구현이 누락됨
+
+**해결 방법:**
+1. `src/app/products/crawl/` 디렉토리 생성
+2. `page.tsx` 파일 작성
+   - URL 입력 및 유효성 검사 UI 구현
+   - 플랫폼 자동 감지 기능 (Taobao, Amazon, Alibaba)
+   - URL 미리보기 및 중복 확인 API 연동
+   - 크롤링 옵션 설정 (자동 번역, 이미지 처리, 마진율)
+   - 사용 방법 안내 섹션 추가
+
+**구현 코드:**
+```typescript
+// src/app/products/crawl/page.tsx
+export default function ProductCrawlPage() {
+  const handleCheckUrl = async () => {
+    const response = await fetch(`/api/v1/products/crawl?url=${encodeURIComponent(url)}`);
+    const result = await response.json();
+    if (result.success) {
+      setPreview(result.data); // 플랫폼, 지원 여부, 중복 여부 표시
+    }
+  };
+
+  const handleStartCrawl = async () => {
+    const response = await fetch('/api/v1/products/crawl', {
+      method: 'POST',
+      body: JSON.stringify({ url, platform, options }),
+    });
+
+    if (result.success) {
+      router.push(`/products/${result.data.productId}`);
+    }
+  };
+
+  return (
+    // URL 입력 폼, 옵션 설정, 안내 섹션
+  );
+}
+```
+
+**검증:**
+- ✅ `/products/crawl` 페이지 정상 로드
+- ✅ URL 입력 필드 및 "URL 확인" 버튼 작동
+- ✅ 크롤링 옵션 UI 정상 표시
+- ✅ 에러 메시지 정상 표시 (DB 미연결 시)
+
+**제한 사항:**
+- API 전체 기능 테스트는 PostgreSQL 데이터베이스 실행 필요
+- 현재는 UI 및 클라이언트 측 기능만 검증 완료
+
+**커밋:**
+```
+fix: 누락된 상품 크롤링 페이지 추가 및 Playwright 테스트 완료
+```
+
+---
+
 ## 테스트 결과 요약
 
 ### 전체 테스트 결과
@@ -292,7 +395,7 @@ fix: 대시보드 빠른 액션 버튼 오류 수정 및 Playwright 테스트 �
 | **빠른 액션 버튼** | | |
 | 주문 관리 버튼 | ✅ 성공 | 페이지 이동 정상 |
 | 상품 등록 버튼 | ⚠️ 수정 완료 | 초기 404 오류 → 페이지 생성으로 해결 |
-| 상품 크롤링 버튼 | ℹ️ 미테스트 | 라우트 존재 확인만 수행 |
+| 상품 크롤링 버튼 | ⚠️ 수정 완료 | 페이지 누락 → 크롤링 페이지 구현 완료 |
 | **주문 관리** | | |
 | 페이지 로드 | ✅ 성공 | API 호출 정상 |
 | 통계 표시 | ✅ 성공 | 4개 통계 카드 정상 |
@@ -303,8 +406,8 @@ fix: 대시보드 빠른 액션 버튼 오류 수정 및 Playwright 테스트 �
 | 상품 등록 페이지 | ✅ 성공 | 수정 후 정상 작동 |
 
 ### 성공률
-- **전체 테스트**: 23/23 (100%)
-- **수정 필요 항목**: 1건 (상품 등록 페이지) → 수정 완료
+- **전체 테스트**: 24/24 (100%)
+- **수정 필요 항목**: 2건 (상품 등록 페이지, 상품 크롤링 페이지) → 모두 수정 완료
 
 ### 스크린샷 목록
 1. `01-register-page.png`: 회원가입 페이지 (이전 테스트)
@@ -312,7 +415,9 @@ fix: 대시보드 빠른 액션 버튼 오류 수정 및 Playwright 테스트 �
 3. `orders-page.png`: 주문 관리 페이지
 4. `products-new-error.png`: 상품 등록 페이지 오류 (수정 전)
 5. `products-new-page-fixed.png`: 상품 등록 페이지 정상 (수정 후)
-6. `error-screenshot.png`: 기타 에러 스크린샷
+6. `crawl-error-no-page.png`: 상품 크롤링 페이지 오류 (수정 전)
+7. `crawl-page-loaded.png`: 상품 크롤링 페이지 정상 (수정 후)
+8. `error-screenshot.png`: 기타 에러 스크린샷
 
 ---
 

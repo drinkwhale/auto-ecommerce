@@ -302,7 +302,7 @@ export async function PATCH(
 
 /**
  * DELETE /api/v1/products/[id]
- * 상품 삭제 (소프트 삭제: ARCHIVED 상태로 변경)
+ * 상품 삭제 (하드 삭제: 완전 삭제)
  */
 export async function DELETE(
   request: NextRequest,
@@ -319,8 +319,6 @@ export async function DELETE(
     }
 
     const { id } = params;
-    const { searchParams } = new URL(request.url);
-    const hardDelete = searchParams.get('hard') === 'true';
 
     // 기존 상품 조회
     const existingProduct = await prisma.product.findUnique({
@@ -334,7 +332,7 @@ export async function DELETE(
       );
     }
 
-    // 소유자 확인 (Admin만 하드 삭제 가능)
+    // 소유자 확인
     if (existingProduct.userId !== session.user.id) {
       return NextResponse.json(
         { success: false, error: '삭제 권한이 없습니다.' },
@@ -342,68 +340,31 @@ export async function DELETE(
       );
     }
 
-    if (hardDelete && session.user.role !== 'ADMIN') {
-      return NextResponse.json(
-        { success: false, error: '하드 삭제 권한이 없습니다.' },
-        { status: 403 }
-      );
-    }
+    // 하드 삭제: 실제 데이터 삭제
+    await prisma.product.delete({
+      where: { id },
+    });
 
-    if (hardDelete) {
-      // 하드 삭제: 실제 데이터 삭제
-      await prisma.product.delete({
-        where: { id },
-      });
-
-      // 활동 로그 생성
-      await prisma.activityLog.create({
-        data: {
-          userId: session.user.id,
-          entityType: 'PRODUCT',
-          entityId: id,
-          action: 'DELETE',
-          description: `상품 완전 삭제: ${(existingProduct.originalData as any).title}`,
-          metadata: {
-            deleteType: 'HARD',
-          },
-          ipAddress: request.headers.get('x-forwarded-for') || undefined,
-          userAgent: request.headers.get('user-agent') || undefined,
+    // 활동 로그 생성
+    await prisma.activityLog.create({
+      data: {
+        userId: session.user.id,
+        entityType: 'PRODUCT',
+        entityId: id,
+        action: 'DELETE',
+        description: `상품 삭제: ${(existingProduct.originalData as any).title}`,
+        metadata: {
+          deleteType: 'HARD',
         },
-      });
+        ipAddress: request.headers.get('x-forwarded-for') || undefined,
+        userAgent: request.headers.get('user-agent') || undefined,
+      },
+    });
 
-      return NextResponse.json({
-        success: true,
-        message: '상품이 완전히 삭제되었습니다.',
-      });
-    } else {
-      // 소프트 삭제: ARCHIVED 상태로 변경
-      const archivedProduct = await prisma.product.update({
-        where: { id },
-        data: { status: 'ARCHIVED' },
-      });
-
-      // 활동 로그 생성
-      await prisma.activityLog.create({
-        data: {
-          userId: session.user.id,
-          entityType: 'PRODUCT',
-          entityId: id,
-          action: 'DELETE',
-          description: `상품 아카이브: ${(archivedProduct.originalData as any).title}`,
-          metadata: {
-            deleteType: 'SOFT',
-          },
-          ipAddress: request.headers.get('x-forwarded-for') || undefined,
-          userAgent: request.headers.get('user-agent') || undefined,
-        },
-      });
-
-      return NextResponse.json({
-        success: true,
-        message: '상품이 아카이브되었습니다.',
-        data: archivedProduct,
-      });
-    }
+    return NextResponse.json({
+      success: true,
+      message: '상품이 삭제되었습니다.',
+    });
   } catch (error) {
     console.error('상품 삭제 중 오류:', error);
 

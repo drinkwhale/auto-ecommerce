@@ -42,7 +42,6 @@ export async function GET(request: NextRequest) {
     const sortBy = searchParams.get('sortBy') || 'createdAt';
     const sortOrder = searchParams.get('sortOrder') || 'desc';
     const userId = searchParams.get('userId') || session.user.id;
-    const includeArchived = searchParams.get('includeArchived') === 'true';
 
     // 페이지네이션 계산
     const skip = (page - 1) * limit;
@@ -52,14 +51,9 @@ export async function GET(request: NextRequest) {
       userId: userId,
     };
 
-    // 상태 필터링: ARCHIVED는 기본적으로 제외
+    // 상태 필터링
     if (status) {
       where.status = status;
-    } else if (!includeArchived) {
-      // 특정 상태 지정이 없고, includeArchived가 false이면 ARCHIVED 제외
-      where.status = {
-        not: 'ARCHIVED',
-      };
     }
 
     if (search) {

@@ -351,8 +351,8 @@ git commit -m "feat: T047 ProductList 컴포넌트 구현"
 git push origin feature/T047-product-list-component
 
 # 5. Pull Request 생성 (GitHub)
-# - develop 브랜치로 병합 요청
-# - 코드 리뷰 후 승인되면 Squash and Merge
+- develop 브랜치로 병합 요청
+- 코드 리뷰 후 승인되면 Squash and Merge
 
 # 6. 병합 후 로컬 브랜치 정리
 git checkout develop

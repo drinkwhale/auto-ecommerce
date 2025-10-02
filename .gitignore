@@ -143,7 +143,7 @@ Thumbs.db
 *~
 
 # Claude Code 관련 파일
-# .claude/
+.claude/
 # claude-session.json
 # claude-context.json
 # .claude-*

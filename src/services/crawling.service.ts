@@ -896,6 +896,21 @@ class CrawlingService {
 
     return urlMap[platform];
   }
+
+  /**
+   * 목 이미지 URL 생성
+   * 실제 배포 시에는 플랫폼에서 가져온 실제 이미지 URL로 교체
+   */
+  private generateMockImage(query: string, productId: number): string {
+    // Placeholder 이미지 서비스 사용 (예: placehold.co 또는 picsum.photos)
+    // 여기서는 간단히 placeholder URL 생성
+    const width = 400;
+    const height = 400;
+    const seed = productId;
+
+    // Picsum Photos API를 사용한 랜덤 이미지
+    return `https://picsum.photos/seed/${seed}/${width}/${height}`;
+  }
 }
 
 // 싱글톤 인스턴스 내보내기

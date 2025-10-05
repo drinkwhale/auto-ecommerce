@@ -38,7 +38,7 @@ interface Product {
     title: string;
     description?: string;
   };
-  images: {
+  images?: {
     originalUrls: string[];
     processedUrls: string[];
   };
@@ -299,7 +299,7 @@ export default function ProductDetailPage() {
                 title: product.translatedData?.title || product.originalData.title,
                 description: product.translatedData?.description || product.originalData.description || '',
                 price: product.originalData.price,
-                images: product.images.processedUrls || product.images.originalUrls,
+                images: product.images?.processedUrls || product.images?.originalUrls || product.originalData.images || [],
                 marginRate: product.salesSettings.marginRate,
                 salePrice: product.salesSettings.salePrice,
                 targetMarkets: product.salesSettings.targetMarkets,
@@ -317,9 +317,9 @@ export default function ProductDetailPage() {
   // 조회 모드
   const title = product.translatedData?.title || product.originalData.title;
   const description = product.translatedData?.description || product.originalData.description;
-  const images = product.images.processedUrls.length > 0
+  const images = product.images?.processedUrls && product.images.processedUrls.length > 0
     ? product.images.processedUrls
-    : product.images.originalUrls;
+    : product.images?.originalUrls || product.originalData.images || [];
 
   return (
     <div className="min-h-screen bg-gray-50">

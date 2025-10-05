@@ -82,8 +82,14 @@ export function Sidebar({ collapsed = false, onToggle }: SidebarProps) {
   const pathname = usePathname();
   const [expandedItems, setExpandedItems] = useState<string[]>(['/products', '/orders']);
 
-  const isActive = (href: string) => {
-    return pathname === href || pathname?.startsWith(href + '/');
+  const isActive = (href: string, item?: SidebarItem) => {
+    // 자식 메뉴가 있는 부모 항목인 경우: 자식 중 하나라도 활성화되면 부모도 활성화
+    if (item?.children) {
+      return item.children.some(child => pathname === child.href);
+    }
+
+    // 정확히 일치하는 경우만 활성화
+    return pathname === href;
   };
 
   const toggleExpanded = (href: string) => {
@@ -135,7 +141,7 @@ export function Sidebar({ collapsed = false, onToggle }: SidebarProps) {
                     flex items-center justify-between px-3 py-2 rounded-md
                     transition-colors group
                     ${
-                      isActive(item.href)
+                      isActive(item.href, item)
                         ? 'bg-blue-600 text-white'
                         : 'text-gray-300 hover:bg-gray-800 hover:text-white'
                     }

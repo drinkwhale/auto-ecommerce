@@ -12,10 +12,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { PrismaClient, SourcePlatform } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
+import { SourcePlatform } from '@prisma/client';
 import { z } from 'zod';
-
-const prisma = new PrismaClient();
+import { crawlingService } from '@/services/crawling.service';
 
 /**
  * 크롤링 요청 데이터 검증 스키마
@@ -73,16 +73,20 @@ export async function POST(request: NextRequest) {
 
     const { url, platform, options } = validationResult.data;
 
-    // 중복 URL 확인
-    const existingProduct = await prisma.product.findFirst({
+    // 중복 URL 확인 (JSON 필드에서 sourceUrl 검색)
+    const allProducts = await prisma.product.findMany({
       where: {
         userId: session.user.id,
-        sourceInfo: {
-          path: ['sourceUrl'],
-          equals: url,
-        },
+      },
+      select: {
+        id: true,
+        sourceInfo: true,
       },
     });
+
+    const existingProduct = allProducts.find(
+      (p) => (p.sourceInfo as any)?.sourceUrl === url
+    );
 
     if (existingProduct) {
       return NextResponse.json(
@@ -152,11 +156,98 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // 비동기 크롤링 작업 시작 (실제 구현에서는 Queue 사용)
-    // 여기서는 즉시 응답하고, 백그라운드에서 CrawlingService가 처리
-    // TODO: 실제로는 BullMQ 등의 작업 큐에 추가
+    // 크롤링 작업 시작 (비동기 처리)
+    // 백그라운드에서 크롤링을 수행하고 상품을 업데이트
+    // Note: 실제 프로덕션에서는 Queue(BullMQ 등)를 사용하여 처리해야 함
+    (async () => {
+      try {
+        console.log(`크롤링 시작: ${url} (상품 ID: ${product.id})`);
 
-    // 임시 응답: 크롤링 작업이 시작되었음을 알림
+        // 크롤링 실행
+        const crawlResult = await crawlingService.crawlUrl({
+          sourceUrl: url,
+          sourcePlatform: platform,
+          userId: session.user.id,
+        });
+
+        if (crawlResult.success && crawlResult.data) {
+          // 상품 데이터 업데이트
+          const productData = crawlResult.data;
+          const originalPrice = productData.price.amount;
+          const marginRate = options?.marginRate || 30;
+          const salePrice = originalPrice * (1 + marginRate / 100);
+
+          await prisma.product.update({
+            where: { id: product.id },
+            data: {
+              sourceInfo: {
+                sourceUrl: url,
+                sourcePlatform: platform,
+                sourceProductId: crawlResult.metadata.sourceUrl.split('id=')[1]?.split('&')[0] || 'unknown',
+                lastCrawledAt: new Date().toISOString(),
+              },
+              originalData: {
+                title: productData.title,
+                description: productData.description || '',
+                price: productData.price.amount,
+                currency: productData.price.currency,
+                images: productData.images || [],
+                specifications: productData.specifications || {},
+                category: productData.category,
+                brand: productData.brand,
+                model: productData.model,
+                tags: productData.tags || [],
+              },
+              salesSettings: {
+                marginRate: marginRate,
+                salePrice: salePrice,
+                minPrice: originalPrice * 0.9,
+                maxPrice: originalPrice * 2.0,
+                targetMarkets: [],
+                autoUpdate: options?.autoTranslate ?? true,
+              },
+              status: 'READY', // 크롤링 완료 후 READY 상태로 변경
+            },
+          });
+
+          console.log(`크롤링 완료: ${product.id} - ${productData.title}`);
+        } else {
+          // 크롤링 실패 시 ERROR 상태로 변경
+          await prisma.product.update({
+            where: { id: product.id },
+            data: {
+              status: 'ERROR',
+              originalData: {
+                title: '크롤링 실패',
+                description: `오류: ${crawlResult.error?.message || '알 수 없는 오류'}`,
+                price: 0,
+                images: [],
+              },
+            },
+          });
+
+          console.error(`크롤링 실패: ${product.id}`, crawlResult.error);
+        }
+      } catch (error) {
+        console.error(`크롤링 중 예외 발생: ${product.id}`, error);
+
+        // 오류 발생 시 ERROR 상태로 변경
+        await prisma.product.update({
+          where: { id: product.id },
+          data: {
+            status: 'ERROR',
+            originalData: {
+              title: '크롤링 실패',
+              description: `오류: ${error instanceof Error ? error.message : '알 수 없는 오류'}`,
+              price: 0,
+              images: [],
+            },
+          },
+        });
+      }
+    })();
+
+    // 즉시 응답: 크롤링 작업이 시작되었음을 알림
     return NextResponse.json(
       {
         success: true,
@@ -247,22 +338,23 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // 중복 URL 확인
-    const existingProduct = await prisma.product.findFirst({
+    // 중복 URL 확인 (JSON 필드에서 sourceUrl 검색)
+    const allUserProducts = await prisma.product.findMany({
       where: {
         userId: session.user.id,
-        sourceInfo: {
-          path: ['sourceUrl'],
-          equals: url,
-        },
       },
       select: {
         id: true,
         status: true,
+        sourceInfo: true,
         originalData: true,
         createdAt: true,
       },
     });
+
+    const existingProduct = allUserProducts.find(
+      (p) => (p.sourceInfo as any)?.sourceUrl === url
+    );
 
     return NextResponse.json({
       success: true,

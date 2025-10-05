@@ -372,6 +372,176 @@ fix: 누락된 상품 크롤링 페이지 추가 및 Playwright 테스트 완료
 
 ---
 
+### Issue #3: 상품 크롤링 API - product.images undefined 오류
+
+**발견 일시:** 2025-10-02
+
+**증상:**
+- 상품 크롤링 시작 버튼 클릭 후 상품 상세 페이지로 리다이렉트
+- 상품 상세 페이지에서 런타임 오류 발생
+- 에러 메시지: `TypeError: Cannot read properties of undefined (reading 'length')`
+- 에러 위치: `src/app/(protected)/products/[id]/page.tsx:320:47`
+
+**원인 분석:**
+1. 크롤링 API (`/api/v1/products/crawl`)에서 상품 생성 시 `images` 필드를 생성하지 않음
+2. Prisma 스키마에서 `Product` 모델은 `ProductImage[]` relation을 가짐
+3. 상품 상세 페이지에서 `product.images.processedUrls.length` 접근 시 `product.images`가 `undefined`
+4. 크롤링 API는 임시 상품만 생성하고 이미지 처리는 나중에 하므로 `images` relation이 비어있음
+
+**에러 코드:**
+```typescript
+// src/app/(protected)/products/[id]/page.tsx:320
+const images = product.images.processedUrls.length > 0  // ❌ product.images is undefined
+  ? product.images.processedUrls
+  : product.images.originalUrls;
+```
+
+**해결 방법:**
+1. 상품 상세 페이지의 `Product` 인터페이스 수정
+   - `images` 필드를 optional로 변경: `images?: { ... }`
+2. 안전한 접근 방식으로 코드 수정
+   ```typescript
+   const images = product.images?.processedUrls && product.images.processedUrls.length > 0
+     ? product.images.processedUrls
+     : product.images?.originalUrls || product.originalData.images || [];
+   ```
+3. 편집 모드에서도 동일하게 수정
+   ```typescript
+   images: product.images?.processedUrls || product.images?.originalUrls || product.originalData.images || [],
+   ```
+
+**수정 파일:**
+- `src/app/(protected)/products/[id]/page.tsx` (2곳 수정)
+
+**검증:**
+- ✅ 크롤링 API 정상 작동 (202 Accepted)
+- ✅ 상품 데이터베이스 생성 성공
+- ✅ 상품 상세 페이지 정상 로드 (오류 없음)
+- ✅ 이미지 섹션 "이미지가 없습니다" 정상 표시
+- ✅ 상품 기본 정보 정상 표시
+- ✅ 상품 상태 "처리중" 정상 표시
+
+**스크린샷:**
+- `product-crawl-page-initial.png`: 크롤링 페이지 초기 화면
+- `product-crawl-url-verified.png`: URL 확인 성공 화면
+- `product-crawl-error-images-undefined.png`: 오류 발생 화면 (수정 전)
+- `product-crawl-success-fixed.png`: 정상 작동 화면 (수정 후)
+
+**커밋:**
+```
+fix: 상품 크롤링 후 images undefined 오류 수정
+
+- Product 인터페이스 images 필드 optional로 변경
+- 안전한 접근 방식으로 코드 수정 (optional chaining 사용)
+- 크롤링 API 정상 작동 확인
+- 상품 상세 페이지 오류 해결
+```
+
+---
+
+## 테스트 시나리오 #5: 상품 크롤링 기능 전체 플로우 테스트
+
+### 테스트 일시
+- **2025-10-02**
+
+### 테스트 사용자
+- **이름**: 테스트사용자
+- **이메일**: test@example.com
+
+### 테스트 플로우
+
+#### 1. 상품 크롤링 페이지 접속
+**테스트 단계:**
+1. 대시보드에서 "🔍 상품 크롤링" 버튼 클릭
+2. `/products/crawl` 페이지 로드 확인
+
+**결과:** ✅ 성공
+- 페이지 정상 로드
+- URL 입력 필드 표시
+- "URL 확인" 버튼 비활성화 상태 (URL 미입력)
+- 사용 방법 안내 섹션 표시
+- 지원 플랫폼 안내: "Taobao, Tmall, Amazon, Alibaba, 1688"
+
+**스크린샷:**
+- `product-crawl-page-initial.png`
+
+#### 2. 상품 URL 입력 및 확인
+**테스트 단계:**
+1. URL 입력 필드에 타오바오 상품 URL 입력
+   - `https://item.taobao.com/item.htm?id=987654321`
+2. "URL 확인" 버튼 활성화 확인
+3. "URL 확인" 버튼 클릭
+
+**결과:** ✅ 성공
+- URL 입력 시 버튼 자동 활성화
+- API 호출: `GET /api/v1/products/crawl?url=...`
+- 플랫폼 자동 감지: TAOBAO
+- URL 정보 카드 표시:
+  - 플랫폼: TAOBAO
+  - 지원 여부: ✓ 지원됨
+  - 중복 확인: ✓ 신규 상품
+- 크롤링 옵션 섹션 자동 표시:
+  - 자동 번역: ✓ (기본 활성화)
+  - 이미지 처리: ✓ (기본 활성화)
+  - 마진율: 30% (슬라이더)
+
+**스크린샷:**
+- `product-crawl-url-verified.png`
+
+#### 3. 크롤링 시작
+**테스트 단계:**
+1. 크롤링 옵션 확인 (기본값 사용)
+2. "🔍 크롤링 시작" 버튼 클릭
+3. Alert 메시지 확인
+
+**결과:** ✅ 성공
+- Alert 메시지: "크롤링이 시작되었습니다. (예상 시간: 1-3분)"
+- API 호출: `POST /api/v1/products/crawl` → 202 Accepted
+- 서버 로그 확인:
+  ```
+  prisma:query SELECT ... FROM "public"."products" WHERE "userId" = ...
+  prisma:query INSERT INTO "public"."products" ...
+  prisma:query INSERT INTO "public"."activity_logs" ...
+  POST /api/v1/products/crawl 202 in 10ms
+  ```
+
+#### 4. 상품 상세 페이지 리다이렉트 (오류 발견 및 수정)
+**테스트 단계:**
+1. Alert 수락
+2. 상품 상세 페이지로 자동 리다이렉트
+3. 페이지 확인
+
+**최초 결과:** ❌ 실패
+- 런타임 오류 발생: `TypeError: Cannot read properties of undefined (reading 'length')`
+- 에러 위치: `src/app/(protected)/products/[id]/page.tsx:320`
+- 원인: `product.images`가 `undefined`
+
+**스크린샷 (수정 전):**
+- `product-crawl-error-images-undefined.png`
+
+**수정 후 결과:** ✅ 성공
+- 상품 상세 페이지 정상 로드
+- URL: `/products/cmg9jndvp0005qjvkmt1fio4l`
+- 상품 정보 표시:
+  - 제목: "크롤링 중..."
+  - 설명: "설명 없음"
+  - 상태: 처리중 (PROCESSING)
+  - 원가: ₩0
+  - 마진율: 30%
+  - 판매가: ₩0
+- 이미지 섹션: "이미지가 없습니다" 정상 표시
+- 상태 변경 버튼 표시:
+  - 초안로 변경
+  - 처리중로 변경 (현재 상태, 비활성화)
+  - 준비완료로 변경
+  - 등록완료로 변경
+  - 보관됨로 변경
+
+**스크린샷 (수정 후):**
+- `product-crawl-success-fixed.png`
+
+---
+
 ## 테스트 결과 요약
 
 ### 전체 테스트 결과

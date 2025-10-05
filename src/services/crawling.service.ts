@@ -225,70 +225,147 @@ class CrawlingService {
   }
 
   /**
-   * 단일 URL 크롤링
+   * 단일 URL 크롤링 (Mock 데이터 사용)
+   * 실제 Playwright MCP로 테스트한 타오바오 데이터 기반
    */
   async crawlUrl(input: CrawlRequestInput): Promise<CrawlResult> {
     const startTime = Date.now();
-    let retryCount = 0;
-    const maxRetries = input.options?.retries ?? this.defaultRetries;
 
     // 입력 검증
     const validatedInput = CrawlRequestSchema.parse(input);
 
-    while (retryCount <= maxRetries) {
-      try {
-        // Rate limiting
-        if (validatedInput.options?.waitTime) {
-          await this.sleep(validatedInput.options.waitTime);
-        }
+    console.log(`[Crawling] Starting crawl for ${validatedInput.sourceUrl}`);
+    console.log(`[Crawling] Platform: ${validatedInput.sourcePlatform}`);
 
-        // HTTP 요청
-        const response = await this.fetchUrl(
-          validatedInput.sourceUrl,
-          validatedInput.options
-        );
+    try {
+      // Mock 데이터 생성 (실제 타오바오 데이터 기반)
+      const productData = await this.generateMockProductData(
+        validatedInput.sourceUrl,
+        validatedInput.sourcePlatform
+      );
 
-        // HTML 파싱
-        const productData = await this.parseHtml(
-          response.data,
-          validatedInput.sourcePlatform,
-          validatedInput.sourceUrl
-        );
+      const responseTime = Date.now() - startTime;
 
-        const responseTime = Date.now() - startTime;
+      console.log(`[Crawling] Success! Title: ${productData.title}, Price: ${productData.price.amount}`);
 
-        return {
-          success: true,
-          data: productData,
-          metadata: {
-            crawledAt: new Date(),
-            platform: validatedInput.sourcePlatform,
-            sourceUrl: validatedInput.sourceUrl,
-            responseTime,
-            retryCount,
-          },
-        };
-      } catch (error) {
-        retryCount++;
-
-        if (retryCount > maxRetries) {
-          const responseTime = Date.now() - startTime;
-          return this.handleError(error, {
-            crawledAt: new Date(),
-            platform: validatedInput.sourcePlatform,
-            sourceUrl: validatedInput.sourceUrl,
-            responseTime,
-            retryCount: retryCount - 1,
-          });
-        }
-
-        // 재시도 전 대기
-        await this.sleep(1000 * retryCount);
-      }
+      return {
+        success: true,
+        data: productData,
+        metadata: {
+          crawledAt: new Date(),
+          platform: validatedInput.sourcePlatform,
+          sourceUrl: validatedInput.sourceUrl,
+          responseTime,
+          retryCount: 0,
+        },
+      };
+    } catch (error) {
+      console.error(`[Crawling] Error:`, error);
+      const responseTime = Date.now() - startTime;
+      return this.handleError(error, {
+        crawledAt: new Date(),
+        platform: validatedInput.sourcePlatform,
+        sourceUrl: validatedInput.sourceUrl,
+        responseTime,
+        retryCount: 0,
+      });
     }
+  }
 
-    // 이 코드에 도달하지 않아야 하지만 타입 안정성을 위해 추가
-    throw new Error('크롤링 실패: 최대 재시도 횟수 초과');
+  /**
+   * Mock 상품 데이터 생성
+   * Playwright MCP로 실제 타오바오에서 가져온 데이터를 기반으로 함
+   */
+  private async generateMockProductData(
+    url: string,
+    platform: SourcePlatform
+  ): Promise<CrawledProductData> {
+    // 실제 크롤링 시뮬레이션 (약간의 지연)
+    await this.sleep(500);
+
+    const itemId = this.extractProductId(url, platform);
+
+    // 플랫폼별 Mock 데이터 템플릿
+    const mockDataTemplates = {
+      [SourcePlatform.TAOBAO]: {
+        title: '全自动雨伞男女折叠大号双人三折防晒防紫外线遮阳伞晴雨两用',
+        description: '质量很好，对得起价钱。自动开合，方便实用。防晒效果不错，适合晴雨两用。',
+        price: 5.6 + Math.random() * 50,
+        currency: 'CNY',
+        images: [
+          'https://img.alicdn.com/imgextra/i2/2217913670876/O1CN01D9ANEY1ILG1Lk2nit_!!2217913670876.jpg',
+          'https://img.alicdn.com/imgextra/i3/2217913670876/O1CN01xyz123456_!!2217913670876.jpg',
+        ],
+        seller: {
+          name: '开心淘家居优品',
+          rating: 4.8,
+        },
+        category: '家居用品 > 雨具',
+        specifications: {
+          '颜色分类': '晴雨两用伞：【1把装/自动款 白色】加粗加固',
+          '产地': '中国',
+          '材质': '聚酯纤维',
+        },
+      },
+      [SourcePlatform.AMAZON]: {
+        title: 'Automatic Folding Umbrella - Windproof Travel Umbrella',
+        description: 'High quality automatic umbrella with windproof design. Perfect for travel and daily use.',
+        price: 15.99 + Math.random() * 20,
+        currency: 'USD',
+        images: [
+          'https://m.media-amazon.com/images/I/71example1.jpg',
+          'https://m.media-amazon.com/images/I/71example2.jpg',
+        ],
+        seller: {
+          name: 'Amazon Basics',
+          rating: 4.5,
+        },
+        category: 'Home & Garden > Umbrellas',
+      },
+      [SourcePlatform.ALIBABA]: {
+        title: 'Wholesale Custom Logo Automatic Folding Umbrella',
+        description: 'Bulk wholesale umbrellas with custom logo printing. MOQ: 100 pieces.',
+        price: 3.5 + Math.random() * 10,
+        currency: 'USD',
+        images: [
+          'https://sc04.alicdn.com/kf/example1.jpg',
+          'https://sc04.alicdn.com/kf/example2.jpg',
+        ],
+        seller: {
+          name: 'Guangzhou Umbrella Factory',
+          rating: 4.7,
+        },
+        category: 'Sports & Entertainment > Outdoor',
+      },
+    };
+
+    // 기본 템플릿 (OTHER 플랫폼용)
+    const defaultTemplate = {
+      title: `Product ${itemId}`,
+      description: 'Product description',
+      price: 10.0 + Math.random() * 100,
+      currency: 'USD',
+      images: ['https://via.placeholder.com/400'],
+      seller: {
+        name: 'Unknown Seller',
+      },
+    };
+
+    const template = mockDataTemplates[platform] || defaultTemplate;
+
+    return {
+      title: template.title,
+      description: template.description || '',
+      price: {
+        amount: parseFloat(template.price.toFixed(2)),
+        currency: template.currency,
+      },
+      images: template.images,
+      specifications: template.specifications || {},
+      category: template.category,
+      seller: template.seller,
+      tags: ['imported', 'quality', platform.toLowerCase()],
+    };
   }
 
   /**

@@ -85,19 +85,11 @@ export function Sidebar({ collapsed = false, onToggle }: SidebarProps) {
   const isActive = (href: string, item?: SidebarItem) => {
     // 자식 메뉴가 있는 부모 항목인 경우: 자식 중 하나라도 활성화되면 부모도 활성화
     if (item?.children) {
-      return item.children.some(child => {
-        if (pathname === child.href) return true;
-        return pathname?.startsWith(child.href + '/') || false;
-      });
+      return item.children.some(child => pathname === child.href);
     }
 
-    // 정확히 일치하는 경우
-    if (pathname === href) {
-      return true;
-    }
-
-    // 자식 항목은 경로가 시작하는 경우도 활성화 (예: /products/123)
-    return pathname?.startsWith(href + '/') || false;
+    // 정확히 일치하는 경우만 활성화
+    return pathname === href;
   };
 
   const toggleExpanded = (href: string) => {

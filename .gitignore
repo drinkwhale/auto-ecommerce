@@ -244,4 +244,4 @@ temporary/
 scratch/
 
 # playwright 관련 파일
-./playwright-mcp/
+.playwright-mcp/

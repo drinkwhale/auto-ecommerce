@@ -245,3 +245,6 @@ scratch/
 
 # playwright 관련 파일
 .playwright-mcp/
+
+# 타오바오 크롤러 세션 파일 (로그인 쿠키 포함)
+data/sessions/

@@ -14,6 +14,7 @@ import { PrismaClient, SourcePlatform, ProductStatus } from '@prisma/client';
 import { z } from 'zod';
 import axios, { AxiosInstance, AxiosError } from 'axios';
 import * as cheerio from 'cheerio';
+import { taobaoCrawlerService } from './taobao-crawler.service';
 
 // Prisma 클라이언트 인스턴스
 const prisma = new PrismaClient();
@@ -225,8 +226,9 @@ class CrawlingService {
   }
 
   /**
-   * 단일 URL 크롤링 (Mock 데이터 사용)
-   * 실제 Playwright MCP로 테스트한 타오바오 데이터 기반
+   * 단일 URL 크롤링
+   * 타오바오 플랫폼의 경우 TaobaoCrawlerService 사용 (로그인 세션 기반)
+   * 기타 플랫폼은 Mock 데이터 사용
    */
   async crawlUrl(input: CrawlRequestInput): Promise<CrawlResult> {
     const startTime = Date.now();
@@ -238,7 +240,56 @@ class CrawlingService {
     console.log(`[Crawling] Platform: ${validatedInput.sourcePlatform}`);
 
     try {
-      // Mock 데이터 생성 (실제 타오바오 데이터 기반)
+      // 타오바오 플랫폼인 경우 TaobaoCrawlerService 사용
+      if (validatedInput.sourcePlatform === SourcePlatform.TAOBAO) {
+        console.log(`[Crawling] Using TaobaoCrawlerService for Taobao platform`);
+
+        const productDetail = await taobaoCrawlerService.getProductDetail(
+          validatedInput.sourceUrl
+        );
+
+        const responseTime = Date.now() - startTime;
+
+        const productData: CrawledProductData = {
+          title: productDetail.title,
+          description: productDetail.description,
+          price: {
+            amount: productDetail.price.current,
+            currency: productDetail.price.currency,
+            originalAmount: productDetail.price.original,
+          },
+          images: productDetail.images,
+          specifications: productDetail.specifications,
+          category: productDetail.category,
+          seller: {
+            id: productDetail.seller.id,
+            name: productDetail.seller.name,
+            rating: productDetail.seller.rating,
+          },
+          ratings: productDetail.reviews
+            ? {
+                average: productDetail.reviews.averageRating,
+                count: productDetail.reviews.count,
+              }
+            : undefined,
+        };
+
+        console.log(`[Crawling] Success! Title: ${productData.title}, Price: ${productData.price.amount}`);
+
+        return {
+          success: true,
+          data: productData,
+          metadata: {
+            crawledAt: new Date(),
+            platform: validatedInput.sourcePlatform,
+            sourceUrl: validatedInput.sourceUrl,
+            responseTime,
+            retryCount: 0,
+          },
+        };
+      }
+
+      // 기타 플랫폼은 Mock 데이터 생성 (기존 로직)
       const productData = await this.generateMockProductData(
         validatedInput.sourceUrl,
         validatedInput.sourcePlatform

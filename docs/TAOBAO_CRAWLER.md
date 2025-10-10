@@ -180,18 +180,33 @@ DELETE /api/v1/crawling/taobao/session
 }
 ```
 
-## 기존 CrawlingService와 통합
+## 기존 CrawlingService와의 관계
 
-기존 `CrawlingService`의 `crawlUrl()` 메서드는 타오바오 플랫폼 감지 시 자동으로 `TaobaoCrawlerService`를 사용합니다.
+**중요:** `TaobaoCrawlerService`는 **독립적인 기능**입니다.
+
+- 기존 `CrawlingService`는 **Mock 데이터**를 반환합니다 (변경 없음)
+- `TaobaoCrawlerService`는 **실제 크롤링**을 수행합니다 (신규 기능)
+- 두 서비스는 **별도로 동작**하며, 상호 독립적입니다
 
 ```typescript
-// 기존 방식 (자동으로 TaobaoCrawlerService 사용)
-const result = await crawlingService.crawlUrl({
+// 방법 1: 기존 CrawlingService (Mock 데이터)
+const mockResult = await crawlingService.crawlUrl({
   sourceUrl: 'https://item.taobao.com/item.htm?id=123456',
   sourcePlatform: SourcePlatform.TAOBAO,
   userId: 'user-id',
 });
+// 결과: Mock 데이터 반환 (빠르지만 가짜)
+
+// 방법 2: TaobaoCrawlerService (실제 크롤링)
+const realResult = await taobaoCrawlerService.getProductDetail(
+  'https://item.taobao.com/item.htm?id=123456'
+);
+// 결과: 실제 크롤링 데이터 반환 (느리지만 진짜)
 ```
+
+**사용 시나리오:**
+- **개발/테스트**: `CrawlingService` 사용 (빠른 Mock 데이터)
+- **실제 운영**: 새로운 타오바오 API 사용 (실제 상품 정보)
 
 ## 세션 파일 위치
 

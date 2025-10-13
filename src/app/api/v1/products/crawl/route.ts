@@ -9,6 +9,9 @@
  * Phase 3.5: API 엔드포인트 구현 - T038
  */
 
+// Playwright는 Node.js 런타임이 필요합니다
+export const runtime = 'nodejs';
+
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
@@ -16,6 +19,7 @@ import { prisma } from '@/lib/prisma';
 import { SourcePlatform } from '@prisma/client';
 import { z } from 'zod';
 import { crawlingService } from '@/services/crawling.service';
+import { taobaoCrawlerService } from '@/services/taobao-crawler.service';
 
 /**
  * 크롤링 요청 데이터 검증 스키마
@@ -163,71 +167,99 @@ export async function POST(request: NextRequest) {
       try {
         console.log(`크롤링 시작: ${url} (상품 ID: ${product.id})`);
 
-        // 크롤링 실행
-        const crawlResult = await crawlingService.crawlUrl({
-          sourceUrl: url,
-          sourcePlatform: platform,
-          userId: session.user.id,
+        let productData: any;
+        let originalPrice: number;
+
+        // 플랫폼별 크롤링 로직 분기
+        if (platform === 'TAOBAO') {
+          // 타오바오: TaobaoCrawlerService 사용 (Playwright 기반)
+          console.log(`[Taobao] Using TaobaoCrawlerService for: ${url}`);
+
+          // 세션 상태 확인
+          const sessionStatus = await taobaoCrawlerService.getSessionStatus();
+          if (!sessionStatus.isActive || !sessionStatus.isLoggedIn) {
+            throw new Error(
+              '타오바오 로그인 세션이 필요합니다. /api/v1/crawling/taobao/login을 먼저 호출해주세요.'
+            );
+          }
+
+          // 상품 상세 정보 크롤링
+          const taobaoDetail = await taobaoCrawlerService.getProductDetail(url);
+
+          productData = {
+            title: taobaoDetail.title,
+            description: taobaoDetail.description || '',
+            price: {
+              amount: taobaoDetail.price.current,
+              currency: taobaoDetail.price.currency,
+            },
+            images: taobaoDetail.images || [],
+            specifications: taobaoDetail.specifications || {},
+            category: taobaoDetail.category,
+            seller: taobaoDetail.seller,
+            sales: taobaoDetail.sales,
+            tags: taobaoDetail.tags || ['taobao'],
+          };
+          originalPrice = taobaoDetail.price.current;
+        } else {
+          // 다른 플랫폼: 기존 CrawlingService 사용 (Mock 데이터)
+          const crawlResult = await crawlingService.crawlUrl({
+            sourceUrl: url,
+            sourcePlatform: platform,
+            userId: session.user.id,
+          });
+
+          if (!crawlResult.success || !crawlResult.data) {
+            throw new Error(
+              crawlResult.error?.message || '크롤링에 실패했습니다.'
+            );
+          }
+
+          productData = crawlResult.data;
+          originalPrice = productData.price.amount;
+        }
+
+        // 가격 계산
+        const marginRate = options?.marginRate || 30;
+        const salePrice = originalPrice * (1 + marginRate / 100);
+
+        // 상품 데이터 업데이트
+        await prisma.product.update({
+          where: { id: product.id },
+          data: {
+            sourceInfo: {
+              sourceUrl: url,
+              sourcePlatform: platform,
+              sourceProductId: extractProductId(url, platform),
+              lastCrawledAt: new Date().toISOString(),
+            },
+            originalData: {
+              title: productData.title,
+              description: productData.description || '',
+              price: originalPrice,
+              currency: productData.price.currency,
+              images: productData.images || [],
+              specifications: productData.specifications || {},
+              category: productData.category,
+              brand: productData.brand,
+              model: productData.model,
+              tags: productData.tags || [],
+              seller: productData.seller,
+              sales: productData.sales,
+            },
+            salesSettings: {
+              marginRate: marginRate,
+              salePrice: salePrice,
+              minPrice: originalPrice * 0.9,
+              maxPrice: originalPrice * 2.0,
+              targetMarkets: [],
+              autoUpdate: options?.autoTranslate ?? true,
+            },
+            status: 'READY', // 크롤링 완료 후 READY 상태로 변경
+          },
         });
 
-        if (crawlResult.success && crawlResult.data) {
-          // 상품 데이터 업데이트
-          const productData = crawlResult.data;
-          const originalPrice = productData.price.amount;
-          const marginRate = options?.marginRate || 30;
-          const salePrice = originalPrice * (1 + marginRate / 100);
-
-          await prisma.product.update({
-            where: { id: product.id },
-            data: {
-              sourceInfo: {
-                sourceUrl: url,
-                sourcePlatform: platform,
-                sourceProductId: crawlResult.metadata.sourceUrl.split('id=')[1]?.split('&')[0] || 'unknown',
-                lastCrawledAt: new Date().toISOString(),
-              },
-              originalData: {
-                title: productData.title,
-                description: productData.description || '',
-                price: productData.price.amount,
-                currency: productData.price.currency,
-                images: productData.images || [],
-                specifications: productData.specifications || {},
-                category: productData.category,
-                brand: productData.brand,
-                model: productData.model,
-                tags: productData.tags || [],
-              },
-              salesSettings: {
-                marginRate: marginRate,
-                salePrice: salePrice,
-                minPrice: originalPrice * 0.9,
-                maxPrice: originalPrice * 2.0,
-                targetMarkets: [],
-                autoUpdate: options?.autoTranslate ?? true,
-              },
-              status: 'READY', // 크롤링 완료 후 READY 상태로 변경
-            },
-          });
-
-          console.log(`크롤링 완료: ${product.id} - ${productData.title}`);
-        } else {
-          // 크롤링 실패 시 ERROR 상태로 변경
-          await prisma.product.update({
-            where: { id: product.id },
-            data: {
-              status: 'ERROR',
-              originalData: {
-                title: '크롤링 실패',
-                description: `오류: ${crawlResult.error?.message || '알 수 없는 오류'}`,
-                price: 0,
-                images: [],
-              },
-            },
-          });
-
-          console.error(`크롤링 실패: ${product.id}`, crawlResult.error);
-        }
+        console.log(`크롤링 완료: ${product.id} - ${productData.title}`);
       } catch (error) {
         console.error(`크롤링 중 예외 발생: ${product.id}`, error);
 
@@ -271,6 +303,31 @@ export async function POST(request: NextRequest) {
       },
       { status: 500 }
     );
+  }
+}
+
+/**
+ * URL에서 상품 ID 추출 헬퍼 함수
+ */
+function extractProductId(url: string, platform: string): string {
+  try {
+    const urlObj = new URL(url);
+    const pathname = urlObj.pathname;
+    const searchParams = urlObj.searchParams;
+
+    switch (platform) {
+      case 'TAOBAO':
+        return searchParams.get('id') || pathname.split('/').pop() || 'unknown';
+      case 'AMAZON':
+        const match = pathname.match(/\/dp\/([A-Z0-9]+)/);
+        return match ? match[1] : 'unknown';
+      case 'ALIBABA':
+        return pathname.split('/').pop() || 'unknown';
+      default:
+        return pathname.split('/').pop() || 'unknown';
+    }
+  } catch {
+    return 'unknown';
   }
 }
 

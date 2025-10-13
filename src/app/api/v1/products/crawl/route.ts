@@ -173,34 +173,52 @@ export async function POST(request: NextRequest) {
         // 플랫폼별 크롤링 로직 분기
         if (platform === 'TAOBAO') {
           // 타오바오: TaobaoCrawlerService 사용 (Playwright 기반)
-          console.log(`[Taobao] Using TaobaoCrawlerService for: ${url}`);
+          console.log(`[Taobao] Checking session for: ${url}`);
 
           // 세션 상태 확인
           const sessionStatus = await taobaoCrawlerService.getSessionStatus();
-          if (!sessionStatus.isActive || !sessionStatus.isLoggedIn) {
-            throw new Error(
-              '타오바오 로그인 세션이 필요합니다. /api/v1/crawling/taobao/login을 먼저 호출해주세요.'
-            );
+
+          if (sessionStatus.isActive && sessionStatus.isLoggedIn) {
+            // 세션이 있으면 실제 크롤링
+            console.log(`[Taobao] Using TaobaoCrawlerService (session active)`);
+
+            const taobaoDetail = await taobaoCrawlerService.getProductDetail(url);
+
+            productData = {
+              title: taobaoDetail.title,
+              description: taobaoDetail.description || '',
+              price: {
+                amount: taobaoDetail.price.current,
+                currency: taobaoDetail.price.currency,
+              },
+              images: taobaoDetail.images || [],
+              specifications: taobaoDetail.specifications || {},
+              category: taobaoDetail.category,
+              seller: taobaoDetail.seller,
+              sales: taobaoDetail.sales,
+              tags: taobaoDetail.tags || ['taobao'],
+            };
+            originalPrice = taobaoDetail.price.current;
+          } else {
+            // 세션이 없으면 Mock 데이터 사용 (임시)
+            console.log(`[Taobao] No session found, using CrawlingService mock data`);
+            console.log(`[Taobao] To use real crawling, visit: /api/v1/crawling/taobao/login`);
+
+            const crawlResult = await crawlingService.crawlUrl({
+              sourceUrl: url,
+              sourcePlatform: platform,
+              userId: session.user.id,
+            });
+
+            if (!crawlResult.success || !crawlResult.data) {
+              throw new Error(
+                crawlResult.error?.message || '크롤링에 실패했습니다.'
+              );
+            }
+
+            productData = crawlResult.data;
+            originalPrice = productData.price.amount;
           }
-
-          // 상품 상세 정보 크롤링
-          const taobaoDetail = await taobaoCrawlerService.getProductDetail(url);
-
-          productData = {
-            title: taobaoDetail.title,
-            description: taobaoDetail.description || '',
-            price: {
-              amount: taobaoDetail.price.current,
-              currency: taobaoDetail.price.currency,
-            },
-            images: taobaoDetail.images || [],
-            specifications: taobaoDetail.specifications || {},
-            category: taobaoDetail.category,
-            seller: taobaoDetail.seller,
-            sales: taobaoDetail.sales,
-            tags: taobaoDetail.tags || ['taobao'],
-          };
-          originalPrice = taobaoDetail.price.current;
         } else {
           // 다른 플랫폼: 기존 CrawlingService 사용 (Mock 데이터)
           const crawlResult = await crawlingService.crawlUrl({

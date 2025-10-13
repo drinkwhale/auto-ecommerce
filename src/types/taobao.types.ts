@@ -142,7 +142,7 @@ export interface BrowserSessionData {
 /**
  * 크롤러 설정
  */
-export interface TaobaoC rawlerConfig {
+export interface TaobaoCrawlerConfig {
   headless?: boolean;
   timeout?: number;
   userAgent?: string;

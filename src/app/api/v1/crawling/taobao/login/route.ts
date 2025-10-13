@@ -11,6 +11,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { taobaoCrawlerService } from '@/services/taobao-crawler.service';
 import { z } from 'zod';
 
+// Playwright는 Node.js 런타임이 필요합니다
+export const runtime = 'nodejs';
+
 /**
  * 로그인 요청 스키마
  */

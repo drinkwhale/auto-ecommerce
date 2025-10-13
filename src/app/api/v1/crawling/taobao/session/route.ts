@@ -9,6 +9,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { taobaoCrawlerService } from '@/services/taobao-crawler.service';
 
+// Playwright는 Node.js 런타임이 필요합니다
+export const runtime = 'nodejs';
+
 /**
  * GET 핸들러 - 세션 상태 조회
  */

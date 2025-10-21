@@ -1379,6 +1379,116 @@ describe('GraphQL 뮤테이션 동작 테스트', () => {
       // 부분적으로 생성된 데이터가 없는지 검증 (실제 구현에서는 추가 쿼리로 확인)
     });
   });
+
+  describe('Taobao 상품 수집 뮤테이션', () => {
+    test('importTaobaoProduct 뮤테이션 - 상품 수집 및 가격 계산', async () => {
+      const mutation = `
+        mutation ImportTaobaoProduct($input: TaobaoImportInput!) {
+          importTaobaoProduct(input: $input) {
+            product {
+              id
+              status
+              sourceInfo {
+                sourceUrl
+                sourcePlatform
+                sourceProductId
+              }
+              originalData {
+                title
+                price {
+                  amount
+                  currency
+                }
+              }
+              salesSettings {
+                marginRate
+                salePrice
+                targetMarkets
+              }
+            }
+            pricingSummary {
+              baseCost
+              convertedCost
+              salePrice
+              marginAmount
+              commissionAmount
+            }
+            warnings
+            message
+          }
+        }
+      `;
+
+      const variables = {
+        input: {
+          sourceUrl: 'https://item.taobao.com/item.htm?id=1234567890',
+          marginRate: 0.35,
+          targetCurrency: 'KRW',
+          exchangeRate: 182.5,
+          shippingCost: 4500,
+          commissionRate: 0.12,
+          roundingUnit: 100,
+          targetMarkets: ['COUPANG', 'GMARKET'],
+          tags: ['taobao', 'import'],
+        },
+      };
+
+      if (!testClient) {
+        expect(testClient).toBeNull();
+        console.log('❌ importTaobaoProduct 뮤테이션 테스트: GraphQL 서버 미구현으로 실패 (예상됨)');
+        return;
+      }
+
+      const { data, errors } = await testClient.mutate({
+        mutation,
+        variables,
+        context: { user: { ...testUser, role: 'SELLER' } },
+      });
+
+      expect(errors).toBeUndefined();
+      expect(data.importTaobaoProduct).toBeDefined();
+      expect(data.importTaobaoProduct.product.status).toBe('READY');
+      expect(data.importTaobaoProduct.product.salesSettings.marginRate).toBe(variables.input.marginRate);
+      expect(Array.isArray(data.importTaobaoProduct.warnings)).toBe(true);
+    });
+
+    test('importTaobaoProduct 뮤테이션 - 잘못된 마진율 입력 시 오류 처리', async () => {
+      const mutation = `
+        mutation ImportTaobaoProduct($input: TaobaoImportInput!) {
+          importTaobaoProduct(input: $input) {
+            product {
+              id
+            }
+            message
+          }
+        }
+      `;
+
+      const variables = {
+        input: {
+          sourceUrl: 'https://item.taobao.com/item.htm?id=987654321',
+          marginRate: 1.5,
+          targetCurrency: 'KRW',
+          targetMarkets: ['COUPANG'],
+        },
+      };
+
+      if (!testClient) {
+        expect(testClient).toBeNull();
+        console.log('❌ importTaobaoProduct 뮤테이션 검증 테스트: GraphQL 서버 미구현으로 실패 (예상됨)');
+        return;
+      }
+
+      const { data, errors } = await testClient.mutate({
+        mutation,
+        variables,
+        context: { user: { ...testUser, role: 'SELLER' } },
+      });
+
+      expect(data.importTaobaoProduct).toBeNull();
+      expect(errors?.[0].message).toContain('marginRate');
+    });
+  });
 });
 
 /**

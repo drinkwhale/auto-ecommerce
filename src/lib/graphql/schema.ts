@@ -55,6 +55,14 @@ export const typeDefs = `#graphql
     ARCHIVED
   }
 
+  enum Currency {
+    CNY
+    KRW
+    USD
+    JPY
+    EUR
+  }
+
   # 상품 이미지 타입
   type ProductImage {
     id: ID!
@@ -192,6 +200,7 @@ export const typeDefs = `#graphql
     createProduct(input: CreateProductInput!): Product!
     updateProduct(id: ID!, input: UpdateProductInput!): Product!
     deleteProduct(id: ID!, hard: Boolean): JSON!
+    importTaobaoProduct(input: TaobaoImportInput!): TaobaoImportPayload!
 
     # 주문 뮤테이션
     updateOrderStatus(id: ID!, input: UpdateOrderStatusInput!): Order!
@@ -206,6 +215,21 @@ export const typeDefs = `#graphql
     sourcePlatform: String!
     originalData: JSON!
     salesSettings: JSON!
+  }
+
+  input TaobaoImportInput {
+    sourceUrl: String!
+    sourceProductId: String
+    marginRate: Float!
+    targetCurrency: Currency! = KRW
+    exchangeRate: Float
+    shippingCost: Float
+    commissionRate: Float
+    roundingUnit: Int
+    targetMarkets: [OpenMarketPlatform!]!
+    autoUpdate: Boolean = true
+    tags: [String!]
+    metadata: JSON
   }
 
   input UpdateProductInput {
@@ -227,5 +251,24 @@ export const typeDefs = `#graphql
     url: String!
     platform: String!
     options: JSON
+  }
+
+  type PricingSummary {
+    baseCost: Float!
+    baseCurrency: Currency!
+    convertedCost: Float!
+    targetCurrency: Currency!
+    shippingCost: Float!
+    commissionAmount: Float!
+    marginAmount: Float!
+    salePrice: Float!
+    marginRate: Float!
+  }
+
+  type TaobaoImportPayload {
+    product: Product
+    pricingSummary: PricingSummary
+    warnings: [String!]
+    message: String
   }
 `;

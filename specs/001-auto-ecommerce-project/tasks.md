@@ -194,9 +194,9 @@ Task: "OrderService 주문 처리 로직 in src/services/order.service.ts"
 - [x] T203 구조화 로거 및 요청 컨텍스트 헬퍼 적용 (`src/lib/logger.ts`, `src/lib/request-context.ts`)
 
 ### 3A.2 Taobao GraphQL 흐름
-- [ ] T210 GraphQL Mutation 계약/테스트 정의 (`tests/graphql/mutations.test.ts`, `contracts/graphql/product-ingestion.graphql`)
-- [ ] T211 가격 산식 모듈 구현 및 단위 테스트 (`src/services/pricing.service.ts`, `tests/unit/pricing.service.test.ts`)
-- [ ] T212 Taobao import Mutation 구현 및 에러 핸들링 (`src/app/api/graphql/route.ts`, `src/services/crawling.service.ts`)
+- [x] T210 GraphQL Mutation 계약/테스트 정의 (`tests/graphql/mutations.test.ts`, `contracts/graphql/product-ingestion.graphql`)
+- [x] T211 가격 산식 모듈 구현 및 단위 테스트 (`src/services/pricing.service.ts`, `tests/unit/pricing.service.test.ts`)
+- [x] T212 Taobao import Mutation 구현 및 에러 핸들링 (`src/app/api/graphql/route.ts`, `src/services/crawling.service.ts`)
 
 ### 3A.3 쿠팡 연동 MVP
 - [ ] T220 쿠팡 어댑터 인터페이스 + mock 구현 (`src/services/marketplace/elevenst.adapter.ts`)

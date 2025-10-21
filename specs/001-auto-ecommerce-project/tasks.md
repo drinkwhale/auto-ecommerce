@@ -1,201 +1,68 @@
-# Tasks: 글로벌 쇼핑몰 상품 아웃소싱 오픈마켓 등록 시스템
+# Tasks: 글로벌 쇼핑몰 상품 아웃소싱 오픈마켓 등록 시스템 (MVP 중심)
 
-**Input**: Design documents from `/specs/001-auto-ecommerce-project/`
-**Prerequisites**: research.md, data-model.md, contracts/, quickstart.md
+**Input**: Updated design docs in `/specs/001-auto-ecommerce-project/`
+**Prerequisites**: research.md, data-model.md, quickstart.md, contracts/
 
 ## 기술 스택 요약
-- **Frontend**: Next.js 14+ (App Router), shadcn/ui, Tailwind CSS
-- **Backend**: Next.js API Routes, Prisma ORM, NextAuth.js
-- **Database**: PostgreSQL 15+, Redis 7+
-- **Language**: TypeScript 5+
+- **Runtime**: Next.js 14 (App Router), TypeScript 5, Node.js 20
+- **Data**: Prisma ORM (PostgreSQL), Redis 캐시 (옵션), BullMQ/cron
+- **UI**: shadcn/ui, Tailwind CSS, React Query
+- **Testing**: Jest, Testing Library, Playwright
 
 ## Path Conventions
-웹 애플리케이션 구조:
-- `src/` - 메인 소스 코드
-- `src/app/` - Next.js App Router 페이지
-- `src/components/` - React 컴포넌트
-- `src/lib/` - 유틸리티 및 설정
-- `src/services/` - 비즈니스 로직
-- `tests/` - 테스트 파일
+- `src/app/` → GraphQL 핸들러 및 Next.js 라우트
+- `src/services/` → 도메인 서비스/어댑터
+- `src/lib/` → 유틸리티, 공통 인프라
+- `tests/` → `unit/`, `integration/`, `graphql/`, `e2e/`
+- `docs/` → 운영/구성 문서
 
-## Phase 3.1: 프로젝트 설정
-- [x] T001 프로젝트 구조 생성 및 Next.js 14+ 초기화
-- [x] T002 TypeScript, Tailwind CSS, Prisma 의존성 설치 및 설정
-- [x] T003 [P] ESLint, Prettier 린팅 및 포매팅 도구 설정
-- [x] T004 [P] PostgreSQL 데이터베이스 스키마 초기 설정
+---
 
-## Phase 3.2: 테스트 우선 (TDD) ⚠️ 3.3 이전 필수 완료
-**중요: 구현 전에 테스트를 작성하고 반드시 실패해야 합니다**
+## Phase 3.1: 기초 확립 & 운영 준비
+- [ ] **T001** 검증: Next.js · Tailwind · Prisma 설정 점검 및 필요한 경우 `README.md` 설치 절차 보완
+- [ ] **T002** `.env.example` 강화 및 비밀키 취급 지침 작성 (`docs/configuration.md`)
+- [ ] **T003** 구조화 로거/트레이싱 헬퍼 작성 (`src/lib/logger.ts`, `src/lib/request-context.ts`)
 
-### REST API 계약 테스트
-- [x] T005 [P] 인증 API 계약 테스트 in tests/contract/auth.contract.test.ts
-- [x] T006 [P] 상품 관리 API 계약 테스트 in tests/contract/products.contract.test.ts
-- [x] T007 [P] 주문 관리 API 계약 테스트 in tests/contract/orders.contract.test.ts
-- [x] T008 [P] 통계 API 계약 테스트 in tests/contract/analytics.contract.test.ts
+## Phase 3.2: Taobao 상품 수집 GraphQL 흐름
+- [ ] **T010** GraphQL Mutation 계약/테스트 정의 (`tests/graphql/mutations.test.ts`, `contracts/graphql/product-ingestion.graphql`)
+- [ ] **T011** 가격 산식 모듈 구현 및 단위 테스트 (`src/services/pricing.service.ts`, `tests/unit/pricing.service.test.ts`)
+- [ ] **T012** Taobao import Mutation 구현 및 Error 핸들링 (`src/app/api/graphql/route.ts`, `src/services/crawling.service.ts`)
 
-### GraphQL 스키마 테스트
-- [x] T009 [P] GraphQL 스키마 검증 테스트 in tests/graphql/schema.test.ts
-- [x] T010 [P] GraphQL 쿼리 동작 테스트 in tests/graphql/queries.test.ts
-- [x] T011 [P] GraphQL 뮤테이션 동작 테스트 in tests/graphql/mutations.test.ts
+## Phase 3.3: 쿠팡 연동 MVP
+- [ ] **T020** 쿠팡 어댑터 인터페이스 + mock 구현 (`src/services/marketplace/elevenst.adapter.ts`)
+- [ ] **T021** 외부 API 재시도·백오프 유틸 추가 (`src/lib/external-client.ts`, `tests/unit/external-client.test.ts`)
+- [ ] **T022** Taobao → 쿠팡 통합 테스트 갱신 (`tests/integration/product-registration.test.ts`)
 
-### 통합 테스트 (사용자 시나리오 기반)
-- [x] T012 [P] 상품 크롤링 및 등록 플로우 통합 테스트 in tests/integration/product-registration.test.ts
-- [x] T013 [P] 주문 수신 및 처리 플로우 통합 테스트 in tests/integration/order-processing.test.ts
-- [x] T014 [P] 번역 및 이미지 처리 통합 테스트 in tests/integration/content-processing.test.ts
+## Phase 3.4: 백그라운드 동기화 & 관측성
+- [ ] **T030** 재고/가격 동기화 잡 스케줄링 (`src/lib/cron/inventory-sync.ts`, `tests/unit/cron/inventory-sync.test.ts`)
+- [ ] **T031** 번역 캐시 정책 및 비용 가드 구현 (`src/services/translation.service.ts`, `tests/unit/translation.service.test.ts`)
+- [ ] **T032** BullMQ 큐 로깅/메트릭 삽입 (`src/lib/queue/translation-queue.ts`, `docs/runbooks/queues.md`)
 
-## Phase 3.3: 데이터 모델 구현 (테스트 실패 확인 후에만)
+## Phase 3.5: UI 사용자 여정
+- [ ] **T040** GraphQL Mutation을 `src/app/products/page.tsx`에 연결하고 성공/에러 토스트 제공
+- [ ] **T041** `src/components/product/ProductForm.tsx`에 단계별 진행 상태/검증 메시지 추가
+- [ ] **T042** Playwright E2E 시나리오로 Taobao → 쿠팡 흐름 검증 (`tests/e2e/product-ingestion.spec.ts`)
 
-### Prisma 스키마 및 모델
-- [x] T015 [P] User 엔티티 Prisma 스키마 in prisma/schema.prisma
-- [x] T016 [P] Product 엔티티 Prisma 스키마 in prisma/schema.prisma
-- [x] T017 [P] Order 엔티티 Prisma 스키마 in prisma/schema.prisma
-- [x] T018 [P] CategoryMapping 엔티티 Prisma 스키마 in prisma/schema.prisma
-- [x] T019 [P] ProductImage 엔티티 Prisma 스키마 in prisma/schema.prisma
-- [x] T020 [P] ActivityLog 엔티티 Prisma 스키마 in prisma/schema.prisma
-- [x] T021 [P] SystemConfig 엔티티 Prisma 스키마 in prisma/schema.prisma
+## Phase 3.6: 품질 게이트 & 문서화
+- [ ] **T050** 운영 런북 작성 (`docs/runbooks/taobao-to-elevenst.md`)
+- [ ] **T051** 커버리지 70% 이상 CI 체크 설정 (`package.json`, `.github/workflows/test.yml`)
+- [ ] **T052** API 응답/큐 딜레이 스모크 테스트 (`tests/performance/api-smoke.test.ts`)
+- [ ] **T053** README · AGENTS · quickstart 갱신으로 MVP 흐름 반영
 
-### 데이터베이스 마이그레이션
-- [x] T022 Prisma 마이그레이션 파일 생성 및 데이터베이스 적용
+---
 
-## Phase 3.4: 서비스 계층 구현
+## 의존성 요약
+- Phase 3.2 → 완료 후 Phase 3.3, 3.5 진행 가능
+- Phase 3.3 산출물(어댑터, 재시도)이 Phase 3.4/3.5 테스트에 필요
+- 품질 게이트(Phase 3.6)는 전 단계 결과물에 종속
 
-### 핵심 비즈니스 로직
-- [x] T023 [P] UserService 사용자 관리 로직 in src/services/user.service.ts
-- [x] T024 [P] ProductService 상품 관리 로직 in src/services/product.service.ts
-- [x] T025 [P] OrderService 주문 처리 로직 in src/services/order.service.ts
-- [x] T026 [P] CrawlingService 상품 크롤링 로직 in src/services/crawling.service.ts
-- [x] T027 [P] TranslationService 번역 처리 로직 in src/services/translation.service.ts
-- [x] T028 [P] ImageProcessingService 이미지 처리 로직 in src/services/image-processing.service.ts
+## 병렬 실행 메모
+- [P] 표시 대신, 파일 충돌이 없는 한 Phase 3.1 ↔ 3.2 일부 병렬 가능
+- 통합 테스트는 GraphQL Mutation 완료 후 실행
 
-### 외부 API 연동 서비스
-- [x] T029 [P] OpenMarketService 오픈마켓 연동 in src/services/openmarket.service.ts
-- [x] T030 [P] PaymentService 결제 연동 in src/services/payment.service.ts
-
-## Phase 3.5: API 엔드포인트 구현
-
-### 인증 관련 API
-- [x] T031 NextAuth.js 설정 및 인증 로직 in src/app/api/auth/[...nextauth]/route.ts
-- [x] T032 회원가입 API in src/app/api/auth/register/route.ts
-
-### 상품 관리 API
-- [x] T033 상품 목록 조회 API in src/app/api/v1/products/route.ts
-- [x] T034 상품 생성 API in src/app/api/v1/products/route.ts
-- [x] T035 상품 상세 조회 API in src/app/api/v1/products/[id]/route.ts
-- [x] T036 상품 수정 API in src/app/api/v1/products/[id]/route.ts
-- [x] T037 상품 삭제 API in src/app/api/v1/products/[id]/route.ts
-- [x] T038 상품 크롤링 API in src/app/api/v1/products/crawl/route.ts
-
-### 주문 관리 API
-- [x] T039 주문 목록 조회 API in src/app/api/v1/orders/route.ts
-- [x] T040 주문 상세 조회 API in src/app/api/v1/orders/[id]/route.ts
-- [x] T041 주문 상태 업데이트 API in src/app/api/v1/orders/[id]/route.ts
-
-### 통계 및 분석 API
-- [x] T042 대시보드 통계 API in src/app/api/v1/analytics/dashboard/route.ts
-
-### GraphQL 엔드포인트
-- [x] T043 GraphQL 서버 설정 및 리졸버 구현 in src/app/api/graphql/route.ts
-
-## Phase 3.6: 프론트엔드 컴포넌트
-
-### shadcn/ui 기반 공통 컴포넌트
-- [x] T044 [P] Header 및 Navigation 컴포넌트 in src/components/common/Header.tsx
-- [x] T045 [P] Sidebar 컴포넌트 in src/components/common/Sidebar.tsx
-- [x] T046 [P] DataTable 컴포넌트 in src/components/common/DataTable.tsx
-
-### 상품 관련 컴포넌트
-- [x] T047 [P] ProductList 컴포넌트 in src/components/product/ProductList.tsx
-- [x] T048 [P] ProductForm 컴포넌트 in src/components/product/ProductForm.tsx
-- [x] T049 [P] ProductCard 컴포넌트 in src/components/product/ProductCard.tsx
-
-### 주문 관련 컴포넌트
-- [x] T050 [P] OrderList 컴포넌트 in src/components/order/OrderList.tsx
-- [x] T051 [P] OrderDetail 컴포넌트 in src/components/order/OrderDetail.tsx
-
-## Phase 3.7: 페이지 구현
-
-### 메인 페이지
-- [x] T052 대시보드 페이지 in src/app/dashboard/page.tsx
-- [x] T053 상품 관리 페이지 in src/app/products/page.tsx
-- [x] T054 상품 상세/편집 페이지 in src/app/products/[id]/page.tsx
-- [x] T055 주문 관리 페이지 in src/app/orders/page.tsx
-- [x] T056 통계 페이지 in src/app/analytics/page.tsx
-
-### 인증 페이지
-- [x] T057 [P] 로그인 페이지 in src/app/auth/login/page.tsx
-- [x] T058 [P] 회원가입 페이지 in src/app/auth/register/page.tsx
-
-## Phase 3.8: 통합 및 미들웨어
-
-### 인증 및 보안
-- [x] T059 NextAuth.js 미들웨어 설정 in middleware.ts
-- [x] T060 CORS 및 보안 헤더 설정 in src/lib/cors.ts
-
-### 상태 관리 및 API 클라이언트
-- [x] T061 React Query 설정 in src/lib/react-query.ts
-- [x] T062 [P] API 클라이언트 설정 in src/lib/api-client.ts
-
-### 크론 작업 및 백그라운드 처리
-- [x] T063 [P] 가격 모니터링 크론 작업 in src/lib/cron/price-monitor.ts
-- [x] T064 [P] 자동 번역 큐 처리기 in src/lib/queue/translation-queue.ts
-
-## Phase 3.9: 성능 최적화 및 마무리
-
-### 단위 테스트
-- [ ] T065 [P] ProductService 단위 테스트 in tests/unit/product.service.test.ts
-- [ ] T066 [P] OrderService 단위 테스트 in tests/unit/order.service.test.ts
-- [ ] T067 [P] 유틸리티 함수 단위 테스트 in tests/unit/utils.test.ts
-
-### 성능 테스트
-- [ ] T068 API 응답시간 성능 테스트 (<200ms) in tests/performance/api.test.ts
-- [ ] T069 동시성 처리 테스트 in tests/performance/concurrency.test.ts
-
-### 문서화 및 정리
-- [ ] T070 [P] API 문서 업데이트 in docs/api.md
-- [ ] T071 [P] README.md 및 설치 가이드 작성
-- [ ] T072 코드 중복 제거 및 리팩토링
-
-### 최종 검증
-- [ ] T073 quickstart.md의 시나리오 수동 테스트 실행
-- [ ] T074 전체 E2E 테스트 실행 in tests/e2e/
-
-## 의존성 관계
-- **테스트 우선**: T005-T014 → T015-T074 (모든 구현)
-- **데이터 모델**: T015-T021 → T023-T030 (서비스 계층)
-- **서비스 계층**: T023-T030 → T031-T043 (API 구현)
-- **API 구현**: T031-T043 → T044-T058 (프론트엔드)
-- **컴포넌트**: T044-T051 → T052-T058 (페이지)
-- **통합**: T059-T064 → T065-T074 (최종 검증)
-
-## 병렬 실행 예시
-```bash
-# Phase 3.2: 계약 테스트 동시 실행
-Task: "인증 API 계약 테스트 in tests/contract/auth.contract.test.ts"
-Task: "상품 관리 API 계약 테스트 in tests/contract/products.contract.test.ts"
-Task: "주문 관리 API 계약 테스트 in tests/contract/orders.contract.test.ts"
-Task: "통계 API 계약 테스트 in tests/contract/analytics.contract.test.ts"
-
-# Phase 3.3: 데이터 모델 동시 실행
-Task: "User 엔티티 Prisma 스키마 in prisma/schema.prisma"
-Task: "Product 엔티티 Prisma 스키마 in prisma/schema.prisma"
-Task: "Order 엔티티 Prisma 스키마 in prisma/schema.prisma"
-
-# Phase 3.4: 서비스 계층 동시 실행
-Task: "UserService 사용자 관리 로직 in src/services/user.service.ts"
-Task: "ProductService 상품 관리 로직 in src/services/product.service.ts"
-Task: "OrderService 주문 처리 로직 in src/services/order.service.ts"
-```
-
-## 검증 체크리스트
-- [x] 모든 계약 파일(OpenAPI, GraphQL)에 대응하는 테스트 존재
-- [x] 모든 엔티티(7개)에 대한 모델 생성 작업 존재
-- [x] 모든 테스트가 구현보다 먼저 배치
-- [x] 병렬 작업들이 서로 다른 파일을 수정함
-- [x] 각 작업에 정확한 파일 경로 명시
-- [x] 동일 파일을 수정하는 [P] 작업 없음
-
-## 주요 특징
-- **TDD 방식**: 모든 구현 전에 실패하는 테스트 작성
-- **병렬화**: 독립적인 작업에 [P] 표시로 동시 실행 가능
-- **단계별**: Setup → Tests → Models → Services → APIs → Frontend → Integration
-- **실무 중심**: 실제 구현 가능한 구체적 작업 단위
+## Backlog (Post-MVP)
+- 아마존/알리바바 추가 크롤러
+- 자동 주문 처리 & 결제 연동
+- 멀티마켓 카테고리 매핑 서비스 확장
+- 고급 성능·부하 테스트 (k6, Artillery)
+- 고급 번역 품질 개선 (용어집, human-in-the-loop)

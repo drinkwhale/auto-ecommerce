@@ -47,17 +47,17 @@
 ## Constitution Check
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-**핵심 원칙 준수 상황**:
-- ✅ **모듈화 설계**: 각 기능(크롤링, 번역, 오픈마켓 연동)을 독립적인 서비스로 분리
-- ✅ **API 우선 접근법**: 모든 기능을 REST API로 노출하여 확장성 확보
-- ✅ **테스트 우선 개발**: TDD 방식으로 계약 테스트부터 작성
-- ✅ **관측 가능성**: 구조화된 로깅 및 모니터링 시스템 포함
-- ⚠️ **복잡성 관리**: 다중 외부 API 연동으로 인한 복잡성 존재 (정당화 필요)
+- **핵심 원칙 준수 상황**:
+  - ✅ **모듈화 설계**: 크롤링, 번역, 오픈마켓 연동을 독립 서비스로 나누어 의존성 최소화
+  - ✅ **API 우선 접근법**: GraphQL을 1차 인터페이스로 사용하고, 파트너 연동에 필요한 REST Webhook만 제한적으로 추가
+  - ✅ **테스트 우선 개발**: 계약/통합 테스트를 구현 순서보다 앞에 배치
+  - ✅ **관측 가능성**: 구조화된 로깅, 메트릭, 경보를 기술 문맥에 포함
+  - ⚠️ **복잡성 관리**: 다중 외부 API 연동, 배치/실시간 동기화가 복잡성을 높임 (정당화 필요)
 
 **복잡성 정당화**:
-- 타오바오/아마존 등 다양한 해외 쇼핑몰 API 연동 필수
-- 11번가/지마켓 등 국내 오픈마켓 API 동시 관리 필요
-- 실시간 환율/재고 모니터링으로 인한 백그라운드 작업 복잡성
+- 최소 기능 범위(MVP)에서도 타오바오 → 11번가 양방향 동기화를 지원해야 함
+- 환율 변동, 재고 변화를 따라잡기 위한 주기적 배치/실시간 처리 파이프라인 필요
+- 외부 API의 쿼터·차단 위험을 완화할 재시도, 폴백 전략 설계가 필수
 
 **통과 상태**: ✅ PASS (복잡성 정당화됨)
 
@@ -111,7 +111,7 @@ ios/ or android/
 └── [platform-specific structure]
 ```
 
-**Structure Decision**: Option 2 (Web Application) - Next.js 풀스택 프로젝트
+**Structure Decision**: Option 1 (단일 Next.js 프로젝트) - 현재 저장소 구조(`src/` + `tests/`)와 동일하게 유지하며 API·UI를 App Router에 통합
 
 ## Phase 0: Outline & Research
 1. **Extract unknowns from Technical Context** above:
@@ -170,134 +170,49 @@ ios/ or android/
 ## Phase 2: Task Planning Approach
 *This section describes what the /tasks command will do - DO NOT execute during /plan*
 
-**Task Generation Strategy**:
+**Task Generation Strategy (실행 우선순위)**:
 
-1. **기반 구조 설정** (Infrastructure Setup)
-   - Next.js 14 프로젝트 초기화 및 설정
-   - shadcn/ui 컴포넌트 시스템 설정
-   - Prisma ORM 스키마 정의 및 마이그레이션
-   - TypeScript 설정 및 타입 정의
-   - 테스트 환경 구성 (Jest, Playwright)
+1. **기초 확립**
+   - Next.js + Prisma + Jest 구성을 현행 저장소 기준으로 검증하고 부족한 설정 보완
+   - 환경 변수/시크릿 관리 정책 문서화 (`.env.example`, README 반영)
+   - 로깅/모니터링에 필요한 최소 헬퍼 정의
 
-2. **데이터 계층** (Data Layer)
-   - Prisma 스키마 파일 생성 (`schema.prisma`)
-   - 데이터베이스 마이그레이션 스크립트
-   - 기본 CRUD 리포지토리 패턴 구현
-   - 시드 데이터 및 테스트 픽스처
+2. **핵심 흐름 MVP (Taobao → 11번가)**
+   - Taobao 상품 URL을 받아 GraphQL Mutation으로 상품 초안을 생성
+   - 가격 산식(환율, 마진) 계산 모듈과 단위 테스트 작성
+   - 쿠팡 연동은 mock 어댑터로 시작해 계약/재시도 전략 정의
 
-3. **API 계층** (API Layer)
-   - Next.js API Routes 구조 설정
-   - OpenAPI 스키마 기반 API 엔드포인트 구현
-   - 인증/인가 미들웨어 (NextAuth.js)
-   - API 검증 스키마 (Zod)
-   - 에러 핸들링 및 응답 표준화
+3. **백그라운드 동기화 & 관측성**
+   - 재고/가격 모니터링 작업을 BullMQ(또는 Cron)로 스케줄링하고, 실패 핸들링 로깅 포함
+   - 번역 캐싱/비용 관리 정책 수립 및 테스트
+   - 핵심 워크플로우에 대한 통합 테스트와 커버리지 목표(>70%) 추적
 
-4. **서비스 계층** (Service Layer)
-   - 상품 크롤링 서비스 (Playwright 기반)
-   - 번역 서비스 (Google Translate/Papago 연동)
-   - 이미지 처리 서비스 (Sharp + AWS S3)
-   - 오픈마켓 API 연동 서비스
-   - 백그라운드 작업 큐 시스템 (Bull/BullMQ)
+4. **UI 검증 레이어**
+   - 대시보드/상품 관리 화면에서 MVP 흐름을 조작할 최소 UI 컴포넌트
+   - React Query 캐싱/에러 상태 처리, 사용자 피드백 제공
+   - Playwright 시나리오로 Taobao → 11번가 흐름 검증
 
-5. **UI 컴포넌트** (UI Components)
-   - shadcn/ui 기반 공통 컴포넌트
-   - 상품 관리 페이지 컴포넌트
-   - 주문 관리 페이지 컴포넌트
-   - 대시보드 및 통계 컴포넌트
-   - 반응형 레이아웃 및 네비게이션
+5. **확장 준비**
+   - 추가 마켓/번역/결제 연동은 MVP 후 Backlog로 남기고, 의존성 정리
+   - 성능/부하 테스트는 실제 트래픽 패턴 정의 후 단계적으로 도입
 
-6. **통합 테스트** (Integration Testing)
-   - API 계약 테스트 실행
-   - E2E 테스트 시나리오 구현 (Playwright)
-   - 컴포넌트 테스트 (React Testing Library)
-   - 성능 테스트 및 부하 테스트
+**Ordering Strategy (단계 요약)**:
 
-**Ordering Strategy**:
-
-**Phase A: 기초 인프라** (병렬 가능)
-```
-1. [P] Next.js 프로젝트 초기화
-2. [P] shadcn/ui 설정
-3. [P] TypeScript 설정
-4. [P] 테스트 환경 구성
-5. [P] Prisma ORM 설정
-```
-
-**Phase B: 데이터 모델** (순차 의존성)
-```
-6. Prisma 스키마 정의
-7. 데이터베이스 마이그레이션
-8. 기본 CRUD 리포지토리
-9. 시드 데이터 생성
-```
-
-**Phase C: API 기반** (Phase B 이후)
-```
-10. [P] NextAuth.js 인증 설정
-11. [P] API 미들웨어 구현
-12. [P] Zod 검증 스키마
-13. 상품 API 엔드포인트
-14. 주문 API 엔드포인트
-15. 사용자 API 엔드포인트
-```
-
-**Phase D: 핵심 서비스** (Phase C와 병렬 가능)
-```
-16. [P] 크롤링 서비스 (Playwright)
-17. [P] 번역 서비스 연동
-18. [P] 이미지 처리 서비스
-19. [P] AWS S3 연동
-20. 백그라운드 작업 큐 설정
-```
-
-**Phase E: 오픈마켓 연동** (Phase D 이후)
-```
-21. [P] 쿠팡 API 연동
-22. [P] 네이버 스마트스토어 API 연동
-23. [P] 지마켓 API 연동
-24. 카테고리 매핑 시스템
-25. 자동 등록 워크플로우
-```
-
-**Phase F: 프론트엔드 UI** (Phase C 이후)
-```
-26. [P] 공통 컴포넌트 구현
-27. [P] 레이아웃 및 네비게이션
-28. 대시보드 페이지
-29. 상품 관리 페이지
-30. 주문 관리 페이지
-31. 통계 및 분석 페이지
-```
-
-**Phase G: 테스트 및 검증** (모든 Phase 이후)
-```
-32. API 계약 테스트 실행
-33. 컴포넌트 테스트 구현
-34. E2E 테스트 시나리오
-35. 성능 및 부하 테스트
-36. 보안 검증 테스트
-```
+- Phase A: 인프라 보강 · 환경 설정 (병렬 일부 가능)
+- Phase B: MVP GraphQL + 서비스 로직 (순차)
+- Phase C: 백그라운드 작업 & 관측성 (Phase B 종속)
+- Phase D: UI 및 사용자 여정 마감 (Phase B와 병렬, Phase C 산출 활용)
+- Phase E: 확장 Backlog 및 품질 지표 설정
 
 **특별 고려사항**:
-
-- **shadcn/ui MCP 활용**: UI 컴포넌트 작업 시 shadcn MCP 도구 적극 활용
-- **Playwright MCP 연동**: 각 페이지 완성 후 브라우저 자동 실행 및 검증
-- **브라우저 테스트 자동화**:
-  ```bash
-  # 각 단계 완료 후 자동 실행
-  pnpm dev & sleep 5 && playwright test --ui
-  ```
+- 외부 API 호출은 mock/stub을 우선 사용하고, 실제 키 연동은 별도 보안 검토 후 진행
+- 번역·환율 캐시 만료 정책과 비용 상한선을 문서화하여 운영 리스크 관리
+- 실패하는 테스트를 반드시 먼저 작성하고, 통합 테스트는 GraphQL 경로를 기준으로 유지
 
 **예상 작업량**:
-- **총 36개 작업** (기존 예상 25-30개에서 확장)
-- **병렬 처리 가능**: 18개 작업 ([P] 표시)
-- **예상 소요시간**: 3-4주 (1인 개발 기준)
-
-**품질 관리**:
-- 각 Phase 완료 시 Playwright MCP로 브라우저 검증
-- 모든 API는 계약 테스트 통과 필수
-- UI 컴포넌트는 Storybook에 등록
-- 성능 기준치 미달 시 최적화 작업 추가
+- MVP 완료까지 약 15~20개의 핵심 작업
+- [P] 표시는 병렬 수행 가능하지만 동일 리소스 경합 방지
+- 1인 2~3주 분량을 목표로 스코프 축소
 
 **IMPORTANT**: Phase 2는 /tasks 명령어로 실행되며, /plan 명령어에서는 실행하지 않습니다.
 

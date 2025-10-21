@@ -54,14 +54,14 @@ npm run dev
 
 | 변수 | 설명 | 필수 | 예시 |
 | --- | --- | --- | --- |
-| `DATABASE_URL` | PostgreSQL 연결 문자열 | ✅ | `postgresql://postgres:password@localhost:5432/auto_ecommerce?schema=public` |
-| `NEXTAUTH_URL` | NextAuth 콜백/리다이렉트 URL | ✅ | `http://localhost:3000` |
-| `NEXTAUTH_SECRET` | NextAuth 세션 암호화 키 | ✅ | `min-32-character-secret` |
-| `NEXT_PUBLIC_APP_URL` | 브라우저에서 사용하는 앱 기본 URL | ✅ | `http://localhost:3000` |
-| `LOG_LEVEL` | 로거 출력 레벨 (`info` 기본값) | ⛔️ | `debug` |
-| `REDIS_URL` | BullMQ/캐시용 Redis URL | ⛔️ | `redis://localhost:6379` |
-| `AWS_ACCESS_KEY_ID`/`AWS_SECRET_ACCESS_KEY` | S3 업로드 자격 증명 | ⛔️ | `AKIA...` |
-| `COUPANG_ACCESS_KEY`/`COUPANG_SECRET_KEY` | 쿠팡 API 자격 증명 | ⛔️ | `test_key` |
+| `DATABASE_URL` | PostgreSQL 연결 문자열 | 예 | `postgresql://postgres:password@localhost:5432/auto_ecommerce?schema=public` |
+| `NEXTAUTH_URL` | NextAuth 콜백/리다이렉트 URL | 예 | `http://localhost:3000` |
+| `NEXTAUTH_SECRET` | NextAuth 세션 암호화 키 | 예 | `min-32-character-secret` |
+| `NEXT_PUBLIC_APP_URL` | 브라우저에서 사용하는 앱 기본 URL | 예 | `http://localhost:3000` |
+| `LOG_LEVEL` | 로거 출력 레벨 (`info` 기본값) | 선택 | `debug` |
+| `REDIS_URL` | BullMQ/캐시용 Redis URL | 선택 | `redis://localhost:6379` |
+| `AWS_ACCESS_KEY_ID`/`AWS_SECRET_ACCESS_KEY` | S3 업로드 자격 증명 | 선택 | `AKIA...` |
+| `COUPANG_ACCESS_KEY`/`COUPANG_SECRET_KEY` | 쿠팡 API 자격 증명 | 선택 | `test_key` |
 
 ---
 
@@ -113,4 +113,15 @@ Tailwind 설정은 `tailwind.config.js`, 전역 스타일은 `src/app/globals.cs
 
 ## 라이선스 & 문의
 
-MIT 라이선스를 따릅니다. 이슈/PR 또는 `jackslash@naver.com`을 통해 문의해주세요.
+본 프로젝트는 **CC BY-NC-SA 4.0 (Creative Commons Attribution-NonCommercial-ShareAlike)** 라이선스를 따릅니다.
+
+### 주요 제약사항
+- **상업적 이용 금지**: 상업적 목적으로 사용할 수 없습니다.
+- **저작자 표시**: 원본 출처를 반드시 명시해야 합니다.
+- **동일 조건 변경 허락**: 2차 저작물도 동일한 라이선스 조건을 따라야 합니다.
+
+### 문의 및 기여
+- **버그 리포트 및 기능 제안**: GitHub Issues를 통해 제출해주세요.
+- **이메일 문의**: jackslash@naver.com
+
+본 프로젝트는 개인 프로젝트로 시작했지만, 팀 개발로 확장 가능한 구조로 설계되었습니다.

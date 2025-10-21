@@ -71,7 +71,6 @@ export async function monitorProductPrices(): Promise<{
       try {
         monitored++;
 
-        const sourceInfo = product.sourceInfo as any;
         const originalData = product.originalData as any;
         const oldPrice = originalData.price;
 

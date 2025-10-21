@@ -19,6 +19,9 @@ import { createHmac } from 'crypto';
 // Prisma 클라이언트 인스턴스
 const prisma = new PrismaClient();
 
+const toErrorMessage = (error: unknown): string =>
+  error instanceof Error ? error.message : String(error);
+
 /**
  * 결제 제공자
  */
@@ -415,7 +418,7 @@ class PaymentService {
         expiresAt: new Date(data.dueDate),
       };
     } catch (error) {
-      throw new Error('가상계좌 발급 실패');
+      throw new Error(`가상계좌 발급 실패: ${toErrorMessage(error)}`);
     }
   }
 
@@ -566,7 +569,7 @@ class PaymentService {
 
   private async processTossPayment(
     input: ProcessPaymentInput,
-    order: Order
+    _order: Order
   ): Promise<PaymentResult> {
     const client = this.axiosInstances.get(PaymentProvider.TOSS);
     const secretKey = process.env.TOSS_SECRET_KEY;
@@ -616,7 +619,7 @@ class PaymentService {
         receiptUrl: data.receipt?.url,
       };
     } catch (error) {
-      throw new Error('Toss Payments 결제 실패');
+      throw new Error(`Toss Payments 결제 실패: ${toErrorMessage(error)}`);
     }
   }
 
@@ -660,7 +663,7 @@ class PaymentService {
         status: data.status === 'CANCELED' ? PaymentStatus.REFUNDED : PaymentStatus.PARTIAL_REFUNDED,
       };
     } catch (error) {
-      throw new Error('Toss Payments 환불 실패');
+      throw new Error(`Toss Payments 환불 실패: ${toErrorMessage(error)}`);
     }
   }
 
@@ -670,7 +673,7 @@ class PaymentService {
 
   private async processStripePayment(
     input: ProcessPaymentInput,
-    order: Order
+    _order: Order
   ): Promise<PaymentResult> {
     const client = this.axiosInstances.get(PaymentProvider.STRIPE);
     const secretKey = process.env.STRIPE_SECRET_KEY;
@@ -719,7 +722,7 @@ class PaymentService {
         receiptUrl: data.receipt_url,
       };
     } catch (error) {
-      throw new Error('Stripe 결제 실패');
+      throw new Error(`Stripe 결제 실패: ${toErrorMessage(error)}`);
     }
   }
 
@@ -763,7 +766,7 @@ class PaymentService {
         status: data.status === 'succeeded' ? PaymentStatus.REFUNDED : PaymentStatus.FAILED,
       };
     } catch (error) {
-      throw new Error('Stripe 환불 실패');
+      throw new Error(`Stripe 환불 실패: ${toErrorMessage(error)}`);
     }
   }
 
@@ -773,7 +776,7 @@ class PaymentService {
 
   private async processIamportPayment(
     input: ProcessPaymentInput,
-    order: Order
+    _order: Order
   ): Promise<PaymentResult> {
     // 아임포트 구현 (시뮬레이션)
     return {
@@ -914,15 +917,15 @@ class PaymentService {
     }
   }
 
-  private async handlePaymentCompleted(provider: PaymentProvider, payload: any) {
+  private async handlePaymentCompleted(_provider: PaymentProvider, _payload: unknown) {
     // 결제 완료 처리
   }
 
-  private async handlePaymentFailed(provider: PaymentProvider, payload: any) {
+  private async handlePaymentFailed(_provider: PaymentProvider, _payload: unknown) {
     // 결제 실패 처리
   }
 
-  private async handleRefundCompleted(provider: PaymentProvider, payload: any) {
+  private async handleRefundCompleted(_provider: PaymentProvider, _payload: unknown) {
     // 환불 완료 처리
   }
 }

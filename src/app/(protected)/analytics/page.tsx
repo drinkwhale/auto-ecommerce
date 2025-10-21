@@ -13,10 +13,11 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { clientLogger } from '@/lib/client-logger';
 
 interface AnalyticsData {
   period: {
@@ -65,7 +66,7 @@ interface AnalyticsData {
 }
 
 export default function AnalyticsPage() {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const router = useRouter();
 
   const [data, setData] = useState<AnalyticsData | null>(null);
@@ -79,13 +80,7 @@ export default function AnalyticsPage() {
     }
   }, [status, router]);
 
-  useEffect(() => {
-    if (status === 'authenticated') {
-      fetchAnalytics();
-    }
-  }, [status, period]);
-
-  const fetchAnalytics = async () => {
+  const fetchAnalytics = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -131,11 +126,17 @@ export default function AnalyticsPage() {
       }
     } catch (err) {
       setError('통계 데이터를 불러오는 중 오류가 발생했습니다.');
-      console.error('Analytics fetch error:', err);
+      clientLogger.error('Analytics fetch error:', err);
     } finally {
       setLoading(false);
     }
-  };
+  }, [period]);
+
+  useEffect(() => {
+    if (status === 'authenticated') {
+      fetchAnalytics();
+    }
+  }, [status, fetchAnalytics]);
 
   const formatCurrency = (num: number) => {
     return new Intl.NumberFormat('ko-KR', {

@@ -13,11 +13,12 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { OrderList } from '@/components/order/OrderList';
+import { clientLogger } from '@/lib/client-logger';
 
 interface Order {
   id: string;
@@ -50,7 +51,7 @@ interface PaginationMeta {
 }
 
 export default function OrdersPage() {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -79,20 +80,17 @@ export default function OrdersPage() {
   }, [status, router]);
 
   // 주문 목록 로딩
-  useEffect(() => {
-    if (status === 'authenticated') {
-      fetchOrders();
-    }
-  }, [status, searchQuery, statusFilter, platformFilter, sortBy, sortOrder, pagination.page]);
+  const currentPage = pagination.page;
+  const currentLimit = pagination.limit;
 
-  const fetchOrders = async () => {
+  const fetchOrders = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
 
       const params = new URLSearchParams({
-        page: pagination.page.toString(),
-        limit: pagination.limit.toString(),
+        page: currentPage.toString(),
+        limit: currentLimit.toString(),
         ...(searchQuery && { q: searchQuery }),
         ...(statusFilter !== 'all' && { status: statusFilter }),
         ...(platformFilter !== 'all' && { platform: platformFilter }),
@@ -111,16 +109,29 @@ export default function OrdersPage() {
       }
     } catch (err) {
       setError('주문 목록을 불러오는 중 오류가 발생했습니다.');
-      console.error('Orders fetch error:', err);
+      clientLogger.error('Orders fetch error:', err);
     } finally {
       setLoading(false);
     }
-  };
+  }, [
+    currentLimit,
+    currentPage,
+    platformFilter,
+    searchQuery,
+    sortBy,
+    sortOrder,
+    statusFilter,
+  ]);
+
+  useEffect(() => {
+    if (status === 'authenticated') {
+      fetchOrders();
+    }
+  }, [status, fetchOrders]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     setPagination((prev) => ({ ...prev, page: 1 }));
-    fetchOrders();
   };
 
   const handlePageChange = (page: number) => {
@@ -315,7 +326,7 @@ export default function OrdersPage() {
               <span className="text-sm text-gray-600">필터:</span>
               {searchQuery && (
                 <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
-                  검색: "{searchQuery}"
+                  검색: &quot;{searchQuery}&quot;
                   <button
                     onClick={() => {
                       setSearchQuery('');

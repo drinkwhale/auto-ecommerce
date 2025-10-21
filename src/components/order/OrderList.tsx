@@ -11,7 +11,6 @@
 
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
 import { DataTable, Column } from '../common/DataTable';
 
@@ -78,8 +77,6 @@ export function OrderList({
   onRefresh,
   loading = false,
 }: OrderListProps) {
-  const [selectedRows, setSelectedRows] = useState<Order[]>([]);
-
   const columns: Column<Order>[] = [
     {
       key: 'orderId',

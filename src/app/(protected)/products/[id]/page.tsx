@@ -14,11 +14,12 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { ProductForm } from '@/components/product/ProductForm';
+import { clientLogger } from '@/lib/client-logger';
 
 interface Product {
   id: string;
@@ -32,7 +33,7 @@ interface Product {
     price: number;
     description?: string;
     images?: string[];
-    specifications?: Record<string, any>;
+    specifications?: Record<string, unknown>;
   };
   translatedData?: {
     title: string;
@@ -76,7 +77,7 @@ interface ProductFormData {
 }
 
 export default function ProductDetailPage() {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const router = useRouter();
   const params = useParams();
   const productId = params.id as string;
@@ -95,13 +96,7 @@ export default function ProductDetailPage() {
   }, [status, router]);
 
   // 상품 데이터 로딩
-  useEffect(() => {
-    if (status === 'authenticated') {
-      fetchProduct();
-    }
-  }, [status, productId]);
-
-  const fetchProduct = async () => {
+  const fetchProduct = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -116,11 +111,17 @@ export default function ProductDetailPage() {
       }
     } catch (err) {
       setError('상품 정보를 불러오는 중 오류가 발생했습니다.');
-      console.error('Product fetch error:', err);
+      clientLogger.error('Product fetch error:', err);
     } finally {
       setLoading(false);
     }
-  };
+  }, [productId]);
+
+  useEffect(() => {
+    if (status === 'authenticated') {
+      fetchProduct();
+    }
+  }, [status, fetchProduct]);
 
   const handleUpdate = async (formData: ProductFormData) => {
     try {
@@ -153,7 +154,7 @@ export default function ProductDetailPage() {
       }
     } catch (err) {
       alert('상품 수정 중 오류가 발생했습니다.');
-      console.error('Update error:', err);
+      clientLogger.error('Update error:', err);
     }
   };
 
@@ -183,7 +184,7 @@ export default function ProductDetailPage() {
       }
     } catch (err) {
       alert('상태 변경 중 오류가 발생했습니다.');
-      console.error('Status change error:', err);
+      clientLogger.error('Status change error:', err);
     }
   };
 
@@ -207,7 +208,7 @@ export default function ProductDetailPage() {
       }
     } catch (err) {
       alert('상품 삭제 중 오류가 발생했습니다.');
-      console.error('Delete error:', err);
+      clientLogger.error('Delete error:', err);
     }
   };
 

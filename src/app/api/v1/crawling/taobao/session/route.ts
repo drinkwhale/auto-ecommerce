@@ -8,6 +8,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { taobaoCrawlerService } from '@/services/taobao-crawler.service';
+import { logger } from '@/lib/logger';
 
 // Playwright는 Node.js 런타임이 필요합니다
 export const runtime = 'nodejs';
@@ -16,70 +17,98 @@ export const runtime = 'nodejs';
  * GET 핸들러 - 세션 상태 조회
  */
 export async function GET(request: NextRequest) {
-  try {
-    console.log('[API] Checking Taobao session status...');
+  const requestId = request.headers.get('x-request-id') || undefined;
 
-    const sessionStatus = await taobaoCrawlerService.getSessionStatus();
-
-    return NextResponse.json(
-      {
-        success: true,
-        data: {
-          isActive: sessionStatus.isActive,
-          isLoggedIn: sessionStatus.isLoggedIn,
-          lastUpdated: sessionStatus.lastUpdated,
-          expiresAt: sessionStatus.expiresAt,
-          username: sessionStatus.username,
-        },
+  return logger.withContext(
+    {
+      requestId,
+      source: 'api/v1/crawling/taobao/session',
+      metadata: {
+        method: 'GET',
+        path: '/api/v1/crawling/taobao/session',
       },
-      { status: 200 }
-    );
-  } catch (error) {
-    console.error('[API] Session status check error:', error);
+    },
+    async () => {
+      try {
+        logger.info('Checking Taobao session status');
 
-    return NextResponse.json(
-      {
-        success: false,
-        error: {
-          code: 'SESSION_CHECK_ERROR',
-          message:
-            error instanceof Error ? error.message : '세션 상태 확인에 실패했습니다.',
-        },
-      },
-      { status: 500 }
-    );
-  }
+        const sessionStatus = await taobaoCrawlerService.getSessionStatus();
+
+        return NextResponse.json(
+          {
+            success: true,
+            data: {
+              isActive: sessionStatus.isActive,
+              isLoggedIn: sessionStatus.isLoggedIn,
+              lastUpdated: sessionStatus.lastUpdated,
+              expiresAt: sessionStatus.expiresAt,
+              username: sessionStatus.username,
+            },
+          },
+          { status: 200 }
+        );
+      } catch (error) {
+        logger.error('Session status check error', { error });
+
+        return NextResponse.json(
+          {
+            success: false,
+            error: {
+              code: 'SESSION_CHECK_ERROR',
+              message:
+                error instanceof Error ? error.message : '세션 상태 확인에 실패했습니다.',
+            },
+          },
+          { status: 500 }
+        );
+      }
+    }
+  );
 }
 
 /**
  * DELETE 핸들러 - 세션 삭제
  */
 export async function DELETE(request: NextRequest) {
-  try {
-    console.log('[API] Clearing Taobao session...');
+  const requestId = request.headers.get('x-request-id') || undefined;
 
-    await taobaoCrawlerService.clearSession();
-
-    return NextResponse.json(
-      {
-        success: true,
-        message: '세션이 삭제되었습니다.',
+  return logger.withContext(
+    {
+      requestId,
+      source: 'api/v1/crawling/taobao/session',
+      metadata: {
+        method: 'DELETE',
+        path: '/api/v1/crawling/taobao/session',
       },
-      { status: 200 }
-    );
-  } catch (error) {
-    console.error('[API] Session clear error:', error);
+    },
+    async () => {
+      try {
+        logger.info('Clearing Taobao session');
 
-    return NextResponse.json(
-      {
-        success: false,
-        error: {
-          code: 'SESSION_CLEAR_ERROR',
-          message:
-            error instanceof Error ? error.message : '세션 삭제에 실패했습니다.',
-        },
-      },
-      { status: 500 }
-    );
-  }
+        await taobaoCrawlerService.clearSession();
+
+        return NextResponse.json(
+          {
+            success: true,
+            message: '세션이 삭제되었습니다.',
+          },
+          { status: 200 }
+        );
+      } catch (error) {
+        logger.error('Session clear error', { error });
+
+        return NextResponse.json(
+          {
+            success: false,
+            error: {
+              code: 'SESSION_CLEAR_ERROR',
+              message:
+                error instanceof Error ? error.message : '세션 삭제에 실패했습니다.',
+            },
+          },
+          { status: 500 }
+        );
+      }
+    }
+  );
 }

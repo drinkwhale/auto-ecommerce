@@ -191,7 +191,7 @@ export class UserService {
     });
 
     // 비밀번호 제외하고 반환
-    const { password, ...userWithoutPassword } = user;
+    const { password: _password, ...userWithoutPassword } = user;
     return userWithoutPassword;
   }
 
@@ -210,7 +210,7 @@ export class UserService {
       return null;
     }
 
-    const { password, ...userWithoutPassword } = user;
+    const { password: _password, ...userWithoutPassword } = user;
     return userWithoutPassword;
   }
 
@@ -229,7 +229,7 @@ export class UserService {
       return null;
     }
 
-    const { password, ...userWithoutPassword } = user;
+    const { password: _password, ...userWithoutPassword } = user;
     return userWithoutPassword;
   }
 
@@ -298,7 +298,7 @@ export class UserService {
     });
 
     // 비밀번호 제외
-    const usersWithoutPassword = users.map(({ password, ...user }) => user);
+    const usersWithoutPassword = users.map(({ password: _password, ...user }) => user);
 
     return {
       users: usersWithoutPassword,
@@ -372,7 +372,7 @@ export class UserService {
     });
 
     // 비밀번호 제외하고 반환
-    const { password, ...userWithoutPassword } = updatedUser;
+    const { password: _password, ...userWithoutPassword } = updatedUser;
     return userWithoutPassword;
   }
 

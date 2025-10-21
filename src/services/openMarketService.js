@@ -198,35 +198,35 @@ class OpenMarketService {
   /**
    * 상품을 등록합니다 (추상 메서드)
    */
-  async registerProduct(productData) {
+  async registerProduct(_productData) {
     throw new Error('registerProduct method must be implemented by subclass');
   }
 
   /**
    * 상품을 수정합니다 (추상 메서드)
    */
-  async updateProduct(productId, productData) {
+  async updateProduct(_productId, _productData) {
     throw new Error('updateProduct method must be implemented by subclass');
   }
 
   /**
    * 상품을 삭제합니다 (추상 메서드)
    */
-  async deleteProduct(productId) {
+  async deleteProduct(_productId) {
     throw new Error('deleteProduct method must be implemented by subclass');
   }
 
   /**
    * 상품 목록을 조회합니다 (추상 메서드)
    */
-  async getProducts(options = {}) {
+  async getProducts(_options = {}) {
     throw new Error('getProducts method must be implemented by subclass');
   }
 
   /**
    * 주문 목록을 조회합니다 (추상 메서드)
    */
-  async getOrders(options = {}) {
+  async getOrders(_options = {}) {
     throw new Error('getOrders method must be implemented by subclass');
   }
 
@@ -240,14 +240,14 @@ class OpenMarketService {
   /**
    * 이미지를 업로드합니다 (추상 메서드)
    */
-  async uploadImage(imageFile) {
+  async uploadImage(_imageFile) {
     throw new Error('uploadImage method must be implemented by subclass');
   }
 
   /**
    * 재고를 업데이트합니다 (추상 메서드)
    */
-  async updateInventory(productId, quantity) {
+  async updateInventory(_productId, _quantity) {
     throw new Error('updateInventory method must be implemented by subclass');
   }
 }

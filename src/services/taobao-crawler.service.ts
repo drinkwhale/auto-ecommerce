@@ -14,6 +14,7 @@
 import { chromium, Browser, BrowserContext, Page } from 'playwright';
 import fs from 'fs/promises';
 import path from 'path';
+import { logger } from '@/lib/logger';
 import {
   TaobaoSearchParams,
   TaobaoSearchResult,
@@ -25,6 +26,8 @@ import {
   TaobaoCrawlerConfig,
   CrawlerStatus,
 } from '@/types/taobao.types';
+
+const crawlerLogger = logger.child({ feature: 'taobao-crawler' });
 
 /**
  * TaobaoCrawlerService 클래스
@@ -65,13 +68,13 @@ export class TaobaoCrawlerService {
    */
   async initialize(): Promise<void> {
     if (this.status === CrawlerStatus.READY) {
-      console.log('[TaobaoCrawler] Already initialized');
+      crawlerLogger.debug('Already initialized');
       return;
     }
 
     try {
       this.status = CrawlerStatus.INITIALIZING;
-      console.log('[TaobaoCrawler] Initializing browser...');
+      crawlerLogger.info('Initializing browser');
 
       this.browser = await chromium.launch({
         headless: this.config.headless,
@@ -80,7 +83,7 @@ export class TaobaoCrawlerService {
 
       // 저장된 세션이 있으면 복원
       if (await this.hasSession()) {
-        console.log('[TaobaoCrawler] Restoring session from file...');
+        crawlerLogger.info('Restoring session from file');
         const sessionData = await this.loadSession();
         this.context = await this.browser.newContext({
           storageState: sessionData,
@@ -89,7 +92,7 @@ export class TaobaoCrawlerService {
           viewport: this.config.viewport,
         });
       } else {
-        console.log('[TaobaoCrawler] Creating new context...');
+        crawlerLogger.info('Creating new browser context');
         this.context = await this.browser.newContext({
           userAgent: this.config.userAgent,
           locale: this.config.locale,
@@ -98,10 +101,10 @@ export class TaobaoCrawlerService {
       }
 
       this.status = CrawlerStatus.READY;
-      console.log('[TaobaoCrawler] Initialization completed');
+      crawlerLogger.info('Initialization completed');
     } catch (error) {
       this.status = CrawlerStatus.ERROR;
-      console.error('[TaobaoCrawler] Initialization failed:', error);
+      crawlerLogger.error('Initialization failed', { error });
       throw new Error(
         `브라우저 초기화 실패: ${error instanceof Error ? error.message : '알 수 없는 오류'}`
       );
@@ -128,7 +131,7 @@ export class TaobaoCrawlerService {
     const page = await this.context.newPage();
 
     try {
-      console.log('[TaobaoCrawler] Opening Taobao login page...');
+      crawlerLogger.info('Opening Taobao login page');
 
       // 타오바오 로그인 페이지로 이동
       await page.goto('https://login.taobao.com', {
@@ -136,12 +139,8 @@ export class TaobaoCrawlerService {
         timeout: this.config.timeout,
       });
 
-      console.log(
-        `[TaobaoCrawler] Please login manually. Waiting for ${waitForLogin} seconds...`
-      );
-      console.log(
-        '[TaobaoCrawler] After login, the session will be saved automatically.'
-      );
+      crawlerLogger.info('Waiting for manual login', { waitSeconds: waitForLogin });
+      crawlerLogger.debug('Session will be saved automatically after login');
 
       // 로그인 완료를 대기 (메인 페이지 또는 마이페이지로 리다이렉트 확인)
       try {
@@ -152,7 +151,7 @@ export class TaobaoCrawlerService {
           { timeout: waitForLogin * 1000 }
         );
 
-        console.log('[TaobaoCrawler] Login detected! Saving session...');
+        crawlerLogger.info('Login detected, saving session');
 
         // 세션 저장
         await this.saveSession();
@@ -173,6 +172,13 @@ export class TaobaoCrawlerService {
         };
       } catch (timeoutError) {
         await page.close();
+        crawlerLogger.warn('Login wait timed out', {
+          waitSeconds: waitForLogin,
+          error:
+            timeoutError instanceof Error
+              ? timeoutError.message
+              : String(timeoutError),
+        });
         return {
           success: false,
           message: '로그인 대기 시간이 초과되었습니다.',
@@ -184,7 +190,7 @@ export class TaobaoCrawlerService {
       }
     } catch (error) {
       await page.close();
-      console.error('[TaobaoCrawler] Login session creation failed:', error);
+      crawlerLogger.error('Login session creation failed', { error });
       return {
         success: false,
         message: '로그인 세션 생성 중 오류가 발생했습니다.',
@@ -224,6 +230,7 @@ export class TaobaoCrawlerService {
         lastUpdated: await this.getSessionFileModifiedDate(),
       };
     } catch (error) {
+      crawlerLogger.error('Failed to resolve session status', { error });
       return {
         isActive: false,
         isLoggedIn: false,
@@ -254,7 +261,7 @@ export class TaobaoCrawlerService {
 
     try {
       this.status = CrawlerStatus.CRAWLING;
-      console.log(`[TaobaoCrawler] Searching for: ${params.keyword}`);
+      crawlerLogger.info('Searching Taobao products', { keyword: params.keyword });
 
       // 타오바오 검색 URL 생성
       const searchUrl = this.buildSearchUrl(params);
@@ -335,7 +342,7 @@ export class TaobaoCrawlerService {
     } catch (error) {
       await page.close();
       this.status = CrawlerStatus.READY;
-      console.error('[TaobaoCrawler] Search failed:', error);
+      crawlerLogger.error('Taobao search failed', { error, keyword: params.keyword });
 
       const responseTime = Date.now() - startTime;
 
@@ -378,7 +385,7 @@ export class TaobaoCrawlerService {
     const page = await this.context.newPage();
 
     try {
-      console.log(`[TaobaoCrawler] Fetching product detail: ${productUrl}`);
+      crawlerLogger.info('Fetching product detail', { productUrl });
 
       await page.goto(productUrl, {
         waitUntil: 'networkidle',
@@ -430,7 +437,7 @@ export class TaobaoCrawlerService {
       return productDetail as TaobaoProductDetail;
     } catch (error) {
       await page.close();
-      console.error('[TaobaoCrawler] Product detail fetch failed:', error);
+      crawlerLogger.error('Product detail fetch failed', { error, productUrl });
       throw new Error(
         `상품 상세 정보 크롤링 실패: ${error instanceof Error ? error.message : '알 수 없는 오류'}`
       );
@@ -448,7 +455,7 @@ export class TaobaoCrawlerService {
     const sessionData = await this.context.storageState();
     await fs.mkdir(path.dirname(this.sessionPath), { recursive: true });
     await fs.writeFile(this.sessionPath, JSON.stringify(sessionData, null, 2));
-    console.log(`[TaobaoCrawler] Session saved to ${this.sessionPath}`);
+    crawlerLogger.info('Session saved', { sessionPath: this.sessionPath });
   }
 
   /**
@@ -477,11 +484,12 @@ export class TaobaoCrawlerService {
   async clearSession(): Promise<void> {
     try {
       await fs.unlink(this.sessionPath);
-      console.log('[TaobaoCrawler] Session cleared');
+      crawlerLogger.info('Session cleared');
     } catch (error) {
+      const err = error as NodeJS.ErrnoException;
       // 파일이 없으면 무시
-      if ((error as any).code !== 'ENOENT') {
-        throw error;
+      if (err.code !== 'ENOENT') {
+        throw err;
       }
     }
   }
@@ -510,6 +518,7 @@ export class TaobaoCrawlerService {
       return isLoggedIn;
     } catch (error) {
       await page.close();
+      crawlerLogger.warn('Login verification failed', { error });
       return false;
     }
   }
@@ -587,7 +596,7 @@ export class TaobaoCrawlerService {
    * 리소스 정리
    */
   async close(): Promise<void> {
-    console.log('[TaobaoCrawler] Closing browser...');
+    crawlerLogger.info('Closing browser');
 
     if (this.context) {
       await this.context.close();
@@ -600,7 +609,7 @@ export class TaobaoCrawlerService {
     }
 
     this.status = CrawlerStatus.CLOSED;
-    console.log('[TaobaoCrawler] Browser closed');
+    crawlerLogger.info('Browser closed');
   }
 
   /**

@@ -366,7 +366,7 @@ class OpenMarketService {
           // 여기서는 간략화
           created++;
         }
-      } catch (error) {
+      } catch {
         failed++;
       }
     }
@@ -421,7 +421,7 @@ class OpenMarketService {
         );
 
         results.push({ success, platform });
-      } catch (error) {
+      } catch {
         results.push({ success: false, platform });
       }
     }
@@ -544,7 +544,7 @@ class OpenMarketService {
 
     const salesSettings = product.salesSettings as any;
 
-    const requestBody = {
+    const _requestBody = {
       vendorId: credentials.vendorId,
       displayCategoryCode: categoryId,
       sellerProductName: translatedData.title,
@@ -563,8 +563,8 @@ class OpenMarketService {
   }
 
   private async fetchCoupangOrders(
-    input: FetchOrdersInput,
-    credentials: OpenMarketCredentials
+    _input: FetchOrdersInput,
+    _credentials: OpenMarketCredentials
   ): Promise<MarketOrderInfo[]> {
     // 실제 구현에서는 쿠팡 주문 조회 API 호출
     // 시뮬레이션
@@ -572,8 +572,8 @@ class OpenMarketService {
   }
 
   private async updateCoupangOrderStatus(
-    input: UpdateOrderStatusInput,
-    credentials: OpenMarketCredentials
+    _input: UpdateOrderStatusInput,
+    _credentials: OpenMarketCredentials
   ): Promise<boolean> {
     // 실제 구현에서는 쿠팡 주문 상태 업데이트 API 호출
     return true;
@@ -584,9 +584,9 @@ class OpenMarketService {
   // ============================================
 
   private async registerToGmarket(
-    product: any,
-    translatedData: any,
-    categoryId?: string
+    _product: any,
+    _translatedData: any,
+    _categoryId?: string
   ): Promise<{ marketProductId?: string; listingUrl?: string }> {
     const credentials = this.credentials.get(OpenMarketPlatform.GMARKET);
     if (!credentials) {
@@ -601,16 +601,16 @@ class OpenMarketService {
   }
 
   private async fetchGmarketOrders(
-    input: FetchOrdersInput,
-    credentials: OpenMarketCredentials
+    _input: FetchOrdersInput,
+    _credentials: OpenMarketCredentials
   ): Promise<MarketOrderInfo[]> {
     // 실제 구현에서는 지마켓 주문 조회 API 호출
     return [];
   }
 
   private async updateGmarketOrderStatus(
-    input: UpdateOrderStatusInput,
-    credentials: OpenMarketCredentials
+    _input: UpdateOrderStatusInput,
+    _credentials: OpenMarketCredentials
   ): Promise<boolean> {
     // 실제 구현에서는 지마켓 주문 상태 업데이트 API 호출
     return true;
@@ -621,9 +621,9 @@ class OpenMarketService {
   // ============================================
 
   private async registerToStreet11(
-    product: any,
-    translatedData: any,
-    categoryId?: string
+    _product: any,
+    _translatedData: any,
+    _categoryId?: string
   ): Promise<{ marketProductId?: string; listingUrl?: string }> {
     const credentials = this.credentials.get(OpenMarketPlatform.STREET11);
     if (!credentials) {
@@ -638,16 +638,16 @@ class OpenMarketService {
   }
 
   private async fetchStreet11Orders(
-    input: FetchOrdersInput,
-    credentials: OpenMarketCredentials
+    _input: FetchOrdersInput,
+    _credentials: OpenMarketCredentials
   ): Promise<MarketOrderInfo[]> {
     // 실제 구현에서는 11번가 주문 조회 API 호출
     return [];
   }
 
   private async updateStreet11OrderStatus(
-    input: UpdateOrderStatusInput,
-    credentials: OpenMarketCredentials
+    _input: UpdateOrderStatusInput,
+    _credentials: OpenMarketCredentials
   ): Promise<boolean> {
     // 실제 구현에서는 11번가 주문 상태 업데이트 API 호출
     return true;
@@ -658,10 +658,10 @@ class OpenMarketService {
   // ============================================
 
   private async updateStock(
-    productId: string,
-    platform: OpenMarketPlatform,
-    quantity: number,
-    credentials: OpenMarketCredentials
+    _productId: string,
+    _platform: OpenMarketPlatform,
+    _quantity: number,
+    _credentials: OpenMarketCredentials
   ): Promise<boolean> {
     // 실제 구현에서는 플랫폼별 재고 업데이트 API 호출
     return true;
@@ -761,16 +761,16 @@ class OpenMarketService {
     }
   }
 
-  private async handleNewOrder(platform: OpenMarketPlatform, payload: any) {
+  private async handleNewOrder(_platform: OpenMarketPlatform, _payload: unknown) {
     // 새 주문 생성 로직
     // 실제 구현에서는 payload를 파싱하여 Order 생성
   }
 
-  private async handleOrderUpdate(platform: OpenMarketPlatform, payload: any) {
+  private async handleOrderUpdate(_platform: OpenMarketPlatform, _payload: unknown) {
     // 주문 상태 업데이트 로직
   }
 
-  private async handleProductUpdate(platform: OpenMarketPlatform, payload: any) {
+  private async handleProductUpdate(_platform: OpenMarketPlatform, _payload: unknown) {
     // 상품 정보 업데이트 로직
   }
 }

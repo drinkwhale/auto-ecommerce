@@ -10,6 +10,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { taobaoCrawlerService } from '@/services/taobao-crawler.service';
 import { z } from 'zod';
+import { logger } from '@/lib/logger';
 
 // Playwright는 Node.js 런타임이 필요합니다
 export const runtime = 'nodejs';
@@ -25,117 +26,157 @@ const LoginRequestSchema = z.object({
  * GET 핸들러 - 브라우저에서 직접 접속 시 자동으로 로그인 세션 생성
  */
 export async function GET(request: NextRequest) {
-  try {
-    console.log('[API] Starting Taobao login session (GET request, default 120s wait)...');
+  const requestId = request.headers.get('x-request-id') || undefined;
 
-    // 기본 대기 시간 120초
-    const result = await taobaoCrawlerService.createLoginSession(120);
-
-    if (result.success) {
-      return NextResponse.json(
-        {
-          success: true,
-          data: result.session,
-          message: result.message,
-        },
-        { status: 200 }
-      );
-    } else {
-      return NextResponse.json(
-        {
-          success: false,
-          error: {
-            code: result.error?.code || 'LOGIN_FAILED',
-            message: result.error?.message || result.message,
-          },
-        },
-        { status: 400 }
-      );
-    }
-  } catch (error) {
-    console.error('[API] Taobao login error:', error);
-
-    return NextResponse.json(
-      {
-        success: false,
-        error: {
-          code: 'INTERNAL_ERROR',
-          message:
-            error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.',
-        },
+  return logger.withContext(
+    {
+      requestId,
+      source: 'api/v1/crawling/taobao/login',
+      metadata: {
+        method: 'GET',
+        path: '/api/v1/crawling/taobao/login',
       },
-      { status: 500 }
-    );
-  }
+    },
+    async () => {
+      try {
+        logger.info('Starting Taobao login session', { waitSeconds: 120 });
+
+        // 기본 대기 시간 120초
+        const result = await taobaoCrawlerService.createLoginSession(120);
+
+        if (result.success) {
+          logger.info('Taobao login session created successfully');
+
+          return NextResponse.json(
+            {
+              success: true,
+              data: result.session,
+              message: result.message,
+            },
+            { status: 200 }
+          );
+        }
+
+        logger.warn('Taobao login session creation failed', {
+          code: result.error?.code,
+        });
+
+        return NextResponse.json(
+          {
+            success: false,
+            error: {
+              code: result.error?.code || 'LOGIN_FAILED',
+              message: result.error?.message || result.message,
+            },
+          },
+          { status: 400 }
+        );
+      } catch (error) {
+        logger.error('Taobao login error', { error });
+
+        return NextResponse.json(
+          {
+            success: false,
+            error: {
+              code: 'INTERNAL_ERROR',
+              message:
+                error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.',
+            },
+          },
+          { status: 500 }
+        );
+      }
+    }
+  );
 }
 
 /**
  * POST 핸들러 - 대기 시간을 커스터마이즈 가능
  */
 export async function POST(request: NextRequest) {
-  try {
-    const body = await request.json();
+  const requestId = request.headers.get('x-request-id') || undefined;
 
-    // 요청 검증
-    const validatedData = LoginRequestSchema.parse(body);
-
-    console.log(
-      `[API] Starting Taobao login session (wait: ${validatedData.waitForLogin}s)...`
-    );
-
-    // 로그인 세션 생성
-    const result = await taobaoCrawlerService.createLoginSession(
-      validatedData.waitForLogin
-    );
-
-    if (result.success) {
-      return NextResponse.json(
-        {
-          success: true,
-          data: result.session,
-          message: result.message,
-        },
-        { status: 200 }
-      );
-    } else {
-      return NextResponse.json(
-        {
-          success: false,
-          error: {
-            code: result.error?.code || 'LOGIN_FAILED',
-            message: result.error?.message || result.message,
-          },
-        },
-        { status: 400 }
-      );
-    }
-  } catch (error) {
-    console.error('[API] Taobao login error:', error);
-
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: {
-            code: 'VALIDATION_ERROR',
-            message: '입력 데이터가 유효하지 않습니다.',
-            details: error.errors,
-          },
-        },
-        { status: 400 }
-      );
-    }
-
-    return NextResponse.json(
-      {
-        success: false,
-        error: {
-          code: 'INTERNAL_ERROR',
-          message:
-            error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.',
-        },
+  return logger.withContext(
+    {
+      requestId,
+      source: 'api/v1/crawling/taobao/login',
+      metadata: {
+        method: 'POST',
+        path: '/api/v1/crawling/taobao/login',
       },
-      { status: 500 }
-    );
-  }
+    },
+    async () => {
+      try {
+        const body = await request.json();
+
+        // 요청 검증
+        const validatedData = LoginRequestSchema.parse(body);
+
+        logger.info('Starting Taobao login session', {
+          waitSeconds: validatedData.waitForLogin,
+        });
+
+        // 로그인 세션 생성
+        const result = await taobaoCrawlerService.createLoginSession(
+          validatedData.waitForLogin
+        );
+
+        if (result.success) {
+          logger.info('Taobao login session created successfully');
+
+          return NextResponse.json(
+            {
+              success: true,
+              data: result.session,
+              message: result.message,
+            },
+            { status: 200 }
+          );
+        }
+
+        logger.warn('Taobao login session creation failed', {
+          code: result.error?.code,
+        });
+
+        return NextResponse.json(
+          {
+            success: false,
+            error: {
+              code: result.error?.code || 'LOGIN_FAILED',
+              message: result.error?.message || result.message,
+            },
+          },
+          { status: 400 }
+        );
+      } catch (error) {
+        logger.error('Taobao login error', { error });
+
+        if (error instanceof z.ZodError) {
+          return NextResponse.json(
+            {
+              success: false,
+              error: {
+                code: 'VALIDATION_ERROR',
+                message: '입력 데이터가 유효하지 않습니다.',
+                details: error.errors,
+              },
+            },
+            { status: 400 }
+          );
+        }
+
+        return NextResponse.json(
+          {
+            success: false,
+            error: {
+              code: 'INTERNAL_ERROR',
+              message:
+                error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.',
+            },
+          },
+          { status: 500 }
+        );
+      }
+    }
+  );
 }

@@ -151,7 +151,6 @@ Thumbs.db
 
 # Speckit 관련 파일
 # .specify/
-.scripts/
 specs/.backup/
 specs/.temp/
 *.spec.backup

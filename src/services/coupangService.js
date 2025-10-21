@@ -28,7 +28,6 @@ class CoupangService extends OpenMarketService {
     const timestamp = Date.now().toString();
     const method = (config.method || 'GET').toUpperCase();
     const path = this.getPathFromUrl(config.url || '');
-    const query = this.getQueryFromUrl(config.url || '');
 
     // Authorization 생성을 위한 문자열
     let message = timestamp + method + path + this.config.accessKey;
@@ -337,7 +336,7 @@ class CoupangService extends OpenMarketService {
   /**
    * 이미지를 업로드합니다
    */
-  async uploadImage(imageFile) {
+  async uploadImage(_imageFile) {
     try {
       // 쿠팡의 경우 이미지 업로드는 별도의 CDN 서비스를 사용
       // 실제 구현시에는 이미지를 먼저 외부 CDN에 업로드한 후 URL을 사용해야 함

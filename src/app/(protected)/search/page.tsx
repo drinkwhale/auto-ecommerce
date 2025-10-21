@@ -12,10 +12,11 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { SourcePlatform } from '@prisma/client';
+import { clientLogger } from '@/lib/client-logger';
 
 // 플랫폼 옵션 (소스 플랫폼만 포함)
 const PLATFORM_OPTIONS = [
@@ -57,7 +58,7 @@ interface SearchResult {
 }
 
 export default function SearchPage() {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const router = useRouter();
 
   // 검색 상태
@@ -70,6 +71,7 @@ export default function SearchPage() {
   const [searchResult, setSearchResult] = useState<SearchResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const hasSearchedRef = useRef(false);
 
   // 페이지네이션
   const [currentPage, setCurrentPage] = useState(1);
@@ -83,7 +85,7 @@ export default function SearchPage() {
   }, [status, router]);
 
   // 검색 실행
-  const handleSearch = async () => {
+  const handleSearch = useCallback(async () => {
     if (!searchQuery.trim()) {
       setError('검색어를 입력해주세요');
       return;
@@ -91,6 +93,7 @@ export default function SearchPage() {
 
     setIsLoading(true);
     setError(null);
+    hasSearchedRef.current = true;
 
     try {
       const response = await fetch(
@@ -102,29 +105,21 @@ export default function SearchPage() {
       if (result.success) {
         setSearchResult(result.data);
       } else {
-        setError(result.error.message);
+        setError(result.error?.message ?? '검색에 실패했습니다');
       }
     } catch (err) {
       setError('검색 중 오류가 발생했습니다');
-      console.error('검색 오류:', err);
+      clientLogger.error('검색 오류:', err);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [currentPage, limit, searchQuery, selectedPlatform, sortBy, sortOrder]);
 
   // 정렬 변경 시 자동 재검색
   useEffect(() => {
-    if (searchResult) {
-      handleSearch();
-    }
-  }, [sortBy, sortOrder]);
-
-  // 페이지 변경 시 자동 재검색
-  useEffect(() => {
-    if (searchResult && currentPage > 1) {
-      handleSearch();
-    }
-  }, [currentPage]);
+    if (!hasSearchedRef.current) return;
+    handleSearch();
+  }, [handleSearch]);
 
   // 가격 포맷팅
   const formatPrice = (amount: number, currency: string) => {
@@ -247,7 +242,7 @@ export default function SearchPage() {
           <div className="mb-4 flex items-center justify-between">
             <div>
               <h2 className="text-xl font-semibold text-gray-900">
-                검색 결과: "{searchResult.query}"
+                검색 결과: &quot;{searchResult.query}&quot;
                 {searchResult.translatedQuery !== searchResult.query && (
                   <span className="text-gray-500 text-base ml-2">
                     ({searchResult.translatedQuery})

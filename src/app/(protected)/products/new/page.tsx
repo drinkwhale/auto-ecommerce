@@ -14,6 +14,7 @@ import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { ProductForm } from '@/components/product/ProductForm';
+import { clientLogger } from '@/lib/client-logger';
 
 interface ProductFormData {
   sourceUrl: string;
@@ -28,7 +29,7 @@ interface ProductFormData {
 }
 
 export default function ProductNewPage() {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -84,7 +85,7 @@ export default function ProductNewPage() {
       }
     } catch (err) {
       setError('상품 등록 중 오류가 발생했습니다.');
-      console.error('Product create error:', err);
+      clientLogger.error('Product create error:', err);
     } finally {
       setSubmitting(false);
     }

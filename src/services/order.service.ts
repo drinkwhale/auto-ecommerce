@@ -5,7 +5,7 @@
  * Phase 3.4: 서비스 계층 구현 - T025
  */
 
-import { PrismaClient, Order, OrderStatus, OrderItem, PurchaseStatus, ShippingStatus, OpenMarketPlatform, Prisma } from '@prisma/client';
+import { PrismaClient, Order, OrderStatus, PurchaseStatus, ShippingStatus, OpenMarketPlatform, Prisma } from '@prisma/client';
 import { z } from 'zod';
 
 // Prisma 클라이언트 인스턴스
@@ -525,7 +525,7 @@ export class OrderService {
   async cancelOrder(
     orderId: string,
     userId: string,
-    reason?: string
+    _reason?: string
   ): Promise<Order> {
     const order = await prisma.order.findUnique({
       where: { id: orderId },

@@ -10,7 +10,7 @@
  * Phase 3.4: 서비스 계층 구현 - T027
  */
 
-import { PrismaClient, Product, ProductStatus } from '@prisma/client';
+import { PrismaClient, ProductStatus } from '@prisma/client';
 import { z } from 'zod';
 import axios, { AxiosInstance } from 'axios';
 
@@ -261,9 +261,7 @@ class TranslationService {
     // 품질 평가
     const qualityScore = await this.evaluateQuality(
       validatedInput.text,
-      translatedText,
-      validatedInput.sourceLang,
-      validatedInput.targetLang
+      translatedText
     );
 
     const result: TranslateResult = {
@@ -469,15 +467,10 @@ class TranslationService {
       throw new Error('번역 데이터가 없습니다');
     }
 
-    const sourceLang = this.detectLanguage(originalData.title);
-    const targetLang = LanguageCode.KO; // 기본값
-
     // 제목 품질 평가
     const titleQuality = await this.evaluateQuality(
       originalData.title,
-      translatedData.title,
-      sourceLang,
-      targetLang
+      translatedData.title
     );
 
     // 설명 품질 평가
@@ -485,9 +478,7 @@ class TranslationService {
     if (originalData.description && translatedData.description) {
       descQuality = await this.evaluateQuality(
         originalData.description,
-        translatedData.description,
-        sourceLang,
-        targetLang
+        translatedData.description
       );
     }
 
@@ -720,9 +711,7 @@ class TranslationService {
    */
   private async evaluateQuality(
     sourceText: string,
-    translatedText: string,
-    sourceLang: LanguageCode,
-    targetLang: LanguageCode
+    translatedText: string
   ): Promise<number> {
     // 간단한 휴리스틱 기반 품질 평가
     let score = 100;

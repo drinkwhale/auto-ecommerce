@@ -14,6 +14,7 @@
 import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import { clientLogger } from '@/lib/client-logger';
 
 type Platform = 'TAOBAO' | 'AMAZON' | 'ALIBABA' | null;
 
@@ -31,7 +32,7 @@ interface CrawlPreview {
 }
 
 export default function ProductCrawlPage() {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const router = useRouter();
 
   const [url, setUrl] = useState('');
@@ -76,7 +77,7 @@ export default function ProductCrawlPage() {
       }
     } catch (err) {
       setError('URL 확인 중 오류가 발생했습니다.');
-      console.error('URL check error:', err);
+      clientLogger.error('URL check error:', err);
     } finally {
       setLoading(false);
     }
@@ -120,7 +121,7 @@ export default function ProductCrawlPage() {
       }
     } catch (err) {
       setError('크롤링 시작 중 오류가 발생했습니다.');
-      console.error('Crawl start error:', err);
+      clientLogger.error('Crawl start error:', err);
     } finally {
       setCrawling(false);
     }
@@ -337,9 +338,9 @@ export default function ProductCrawlPage() {
           <h3 className="text-sm font-semibold text-blue-900 mb-3">💡 사용 방법</h3>
           <ul className="space-y-2 text-sm text-blue-800">
             <li>1. 타오바오, 아마존, 알리바바 등의 상품 URL을 입력합니다.</li>
-            <li>2. "URL 확인" 버튼을 클릭하여 플랫폼 감지 및 중복 여부를 확인합니다.</li>
+            <li>2. &quot;URL 확인&quot; 버튼을 클릭하여 플랫폼 감지 및 중복 여부를 확인합니다.</li>
             <li>3. 크롤링 옵션을 설정합니다 (번역, 이미지 처리, 마진율).</li>
-            <li>4. "크롤링 시작" 버튼을 클릭하면 자동으로 상품이 등록됩니다.</li>
+            <li>4. &quot;크롤링 시작&quot; 버튼을 클릭하면 자동으로 상품이 등록됩니다.</li>
             <li>5. 크롤링 완료 후 상품 상세 페이지로 이동하여 결과를 확인할 수 있습니다.</li>
           </ul>
         </div>

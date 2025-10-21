@@ -14,11 +14,12 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { ProductList } from '@/components/product/ProductList';
+import { clientLogger } from '@/lib/client-logger';
 
 interface Product {
   id: string;
@@ -50,7 +51,7 @@ interface PaginationMeta {
 }
 
 export default function ProductsPage() {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -78,20 +79,17 @@ export default function ProductsPage() {
   }, [status, router]);
 
   // 상품 목록 로딩
-  useEffect(() => {
-    if (status === 'authenticated') {
-      fetchProducts();
-    }
-  }, [status, searchQuery, statusFilter, sortBy, sortOrder, pagination.page]);
+  const currentPage = pagination.page;
+  const currentLimit = pagination.limit;
 
-  const fetchProducts = async () => {
+  const fetchProducts = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
 
       const params = new URLSearchParams({
-        page: pagination.page.toString(),
-        limit: pagination.limit.toString(),
+        page: currentPage.toString(),
+        limit: currentLimit.toString(),
         ...(searchQuery && { q: searchQuery }),
         ...(statusFilter !== 'all' && { status: statusFilter }),
         sortBy,
@@ -109,16 +107,21 @@ export default function ProductsPage() {
       }
     } catch (err) {
       setError('상품 목록을 불러오는 중 오류가 발생했습니다.');
-      console.error('Products fetch error:', err);
+      clientLogger.error('Products fetch error:', err);
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentLimit, currentPage, searchQuery, statusFilter, sortBy, sortOrder]);
+
+  useEffect(() => {
+    if (status === 'authenticated') {
+      fetchProducts();
+    }
+  }, [status, fetchProducts]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     setPagination((prev) => ({ ...prev, page: 1 }));
-    fetchProducts();
   };
 
   const handlePageChange = (page: number) => {
@@ -147,7 +150,7 @@ export default function ProductsPage() {
       }
     } catch (err) {
       alert('상품 삭제 중 오류가 발생했습니다.');
-      console.error('Delete error:', err);
+      clientLogger.error('Delete error:', err);
     } finally {
       setLoading(false);
     }
@@ -264,7 +267,7 @@ export default function ProductsPage() {
               <span className="text-sm text-gray-600">필터:</span>
               {searchQuery && (
                 <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
-                  검색: "{searchQuery}"
+                  검색: &quot;{searchQuery}&quot;
                   <button
                     onClick={() => {
                       setSearchQuery('');

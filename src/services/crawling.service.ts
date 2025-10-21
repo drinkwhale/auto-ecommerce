@@ -609,7 +609,7 @@ class CrawlingService {
   private async parseHtml(
     html: string,
     platform: SourcePlatform,
-    sourceUrl: string
+    _sourceUrl: string
   ): Promise<CrawledProductData> {
     const $ = cheerio.load(html);
     const selectors = this.platformSelectors[platform];
@@ -682,7 +682,7 @@ class CrawlingService {
   private extractSpecifications(
     $: cheerio.CheerioAPI,
     selector: string,
-    platform: SourcePlatform
+    _platform: SourcePlatform
   ): Record<string, any> {
     const specs: Record<string, any> = {};
 
@@ -700,7 +700,7 @@ class CrawlingService {
   /**
    * 가격 파싱
    */
-  private parsePrice(priceText: string, platform: SourcePlatform): number {
+  private parsePrice(priceText: string, _platform: SourcePlatform): number {
     // 숫자만 추출
     const numericString = priceText.replace(/[^0-9.]/g, '');
     const price = parseFloat(numericString);

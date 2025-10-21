@@ -16,6 +16,7 @@ import { makeExecutableSchema } from '@graphql-tools/schema';
 import { GraphQLError, graphql, parse, validate } from 'graphql';
 import { typeDefs } from '@/lib/graphql/schema';
 import { resolvers } from '@/lib/graphql/resolvers';
+import { logger } from '@/lib/logger';
 
 // GraphQL 스키마 생성
 const schema = makeExecutableSchema({
@@ -28,119 +29,154 @@ const schema = makeExecutableSchema({
  * GraphQL 쿼리 실행
  */
 export async function POST(request: NextRequest) {
-  try {
-    // 세션 조회
-    const session = await getServerSession(authOptions);
+  const requestId =
+    request.headers.get('x-request-id') || request.headers.get('x-trace-id') || undefined;
 
-    // 요청 본문 파싱
-    const body = await request.json();
-    const { query, variables, operationName } = body;
-
-    if (!query) {
-      return new Response(
-        JSON.stringify({
-          errors: [{ message: 'Query가 필요합니다.' }],
-        }),
-        {
-          status: 400,
-          headers: { 'Content-Type': 'application/json' },
-        }
-      );
-    }
-
-    // 쿼리 검증
-    const documentAST = parse(query);
-    const validationErrors = validate(schema, documentAST);
-
-    if (validationErrors.length > 0) {
-      return new Response(
-        JSON.stringify({
-          errors: validationErrors.map((err) => ({
-            message: err.message,
-            locations: err.locations,
-            path: err.path,
-          })),
-        }),
-        {
-          status: 400,
-          headers: { 'Content-Type': 'application/json' },
-        }
-      );
-    }
-
-    // GraphQL 실행
-    const result = await graphql({
-      schema,
-      source: query,
-      variableValues: variables,
-      operationName,
-      contextValue: {
-        session,
-        request,
+  return logger.withContext(
+    {
+      requestId,
+      source: 'api/graphql',
+      metadata: {
+        method: 'POST',
+        path: '/api/graphql',
       },
-    });
+    },
+    async () => {
+      try {
+        // 세션 조회
+        const session = await getServerSession(authOptions);
 
-    // 에러 포맷팅
-    if (result.errors) {
-      const formattedErrors = result.errors.map((error) => {
-        if (error instanceof GraphQLError) {
-          return {
-            message: error.message,
-            locations: error.locations,
-            path: error.path,
-            extensions: error.extensions,
-          };
+        // 요청 본문 파싱
+        const body = await request.json();
+        const { query, variables, operationName } = body;
+
+        if (operationName) {
+          logger.debug('GraphQL request received', {
+            operationName,
+          });
         }
-        return {
-          message: error.message,
-        };
-      });
 
-      return new Response(
-        JSON.stringify({
-          data: result.data,
-          errors: formattedErrors,
-        }),
-        {
+        if (!query) {
+          logger.warn('GraphQL request rejected: missing query');
+
+          return new Response(
+            JSON.stringify({
+              errors: [{ message: 'Query가 필요합니다.' }],
+            }),
+            {
+              status: 400,
+              headers: { 'Content-Type': 'application/json' },
+            }
+          );
+        }
+
+        // 쿼리 검증
+        const documentAST = parse(query);
+        const validationErrors = validate(schema, documentAST);
+
+        if (validationErrors.length > 0) {
+          logger.warn('GraphQL validation failed', {
+            errorCount: validationErrors.length,
+          });
+
+          return new Response(
+            JSON.stringify({
+              errors: validationErrors.map((err) => ({
+                message: err.message,
+                locations: err.locations,
+                path: err.path,
+              })),
+            }),
+            {
+              status: 400,
+              headers: { 'Content-Type': 'application/json' },
+            }
+          );
+        }
+
+        // GraphQL 실행
+        const result = await graphql({
+          schema,
+          source: query,
+          variableValues: variables,
+          operationName,
+          contextValue: {
+            session,
+            request,
+          },
+        });
+
+        // 에러 포맷팅
+        if (result.errors) {
+          const formattedErrors = result.errors.map((error) => {
+            if (error instanceof GraphQLError) {
+              return {
+                message: error.message,
+                locations: error.locations,
+                path: error.path,
+                extensions: error.extensions,
+              };
+            }
+            return {
+              message: error.message,
+            };
+          });
+
+          logger.error('GraphQL execution returned errors', {
+            errorCount: formattedErrors.length,
+          });
+
+          return new Response(
+            JSON.stringify({
+              data: result.data,
+              errors: formattedErrors,
+            }),
+            {
+              status: 200,
+              headers: { 'Content-Type': 'application/json' },
+            }
+          );
+        }
+
+        // 성공 응답
+        logger.info('GraphQL execution succeeded', {
+          hasData: Boolean(result.data),
+        });
+
+        return new Response(JSON.stringify(result), {
           status: 200,
           headers: { 'Content-Type': 'application/json' },
-        }
-      );
-    }
+        });
+      } catch (error) {
+        logger.error('GraphQL execution failed', { error });
 
-    // 성공 응답
-    return new Response(JSON.stringify(result), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
-    });
-  } catch (error) {
-    console.error('GraphQL 실행 중 오류:', error);
-
-    return new Response(
-      JSON.stringify({
-        errors: [
+        return new Response(
+          JSON.stringify({
+            errors: [
+              {
+                message: 'GraphQL 실행 중 오류가 발생했습니다.',
+                extensions: {
+                  code: 'INTERNAL_SERVER_ERROR',
+                  details: error instanceof Error ? error.message : 'Unknown error',
+                },
+              },
+            ],
+          }),
           {
-            message: 'GraphQL 실행 중 오류가 발생했습니다.',
-            extensions: {
-              code: 'INTERNAL_SERVER_ERROR',
-              details: error instanceof Error ? error.message : 'Unknown error',
-            },
-          },
-        ],
-      }),
-      {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' },
+            status: 500,
+            headers: { 'Content-Type': 'application/json' },
+          }
+        );
       }
-    );
-  }
+    }
+  );
 }
 
 /**
  * GET /api/graphql
  * GraphQL Playground (개발 환경에서만)
  */
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   if (process.env.NODE_ENV !== 'development') {
     return new Response('Not Found', { status: 404 });
   }

@@ -319,8 +319,6 @@ class CategoryMappingService {
    * @param {Array} categories - 카테고리 목록
    */
   async updatePlatformCategories(platform, categories) {
-    const cacheKey = `platform_categories:${platform}`;
-
     // 실제 프로덕션에서는 Redis 등의 캐시를 사용
     const categoriesData = {
       platform,
@@ -348,7 +346,7 @@ class CategoryMappingService {
 
       return categoriesData.categories || [];
     } catch (error) {
-      logger.warn(`No cached categories found for platform: ${platform}`);
+      logger.warn(`No cached categories found for platform: ${platform}`, { error });
       return [];
     }
   }

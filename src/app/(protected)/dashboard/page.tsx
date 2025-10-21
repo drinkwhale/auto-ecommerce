@@ -13,10 +13,11 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { clientLogger } from '@/lib/client-logger';
 
 // 타입 정의
 interface DashboardOverview {
@@ -95,7 +96,7 @@ interface DashboardData {
 }
 
 export default function DashboardPage() {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const router = useRouter();
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -110,13 +111,7 @@ export default function DashboardPage() {
   }, [status, router]);
 
   // 대시보드 데이터 로딩
-  useEffect(() => {
-    if (status === 'authenticated') {
-      fetchDashboardData();
-    }
-  }, [status, period]);
-
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -131,11 +126,17 @@ export default function DashboardPage() {
       }
     } catch (err) {
       setError('대시보드 데이터를 불러오는 중 오류가 발생했습니다.');
-      console.error('Dashboard fetch error:', err);
+      clientLogger.error('Dashboard fetch error:', err);
     } finally {
       setLoading(false);
     }
-  };
+  }, [period]);
+
+  useEffect(() => {
+    if (status === 'authenticated') {
+      fetchDashboardData();
+    }
+  }, [status, fetchDashboardData]);
 
   // 숫자 포맷팅
   const formatNumber = (num: number) => {

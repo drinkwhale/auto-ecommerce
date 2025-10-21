@@ -169,7 +169,7 @@ class StructuredLogger {
   }
 
   private log(level: LogLevel, message: unknown, meta?: LogMeta): void {
-    if (levelWeights[level] > levelWeights[this.level]) return
+    if (levelWeights[level] < levelWeights[this.level]) return
 
     const context = getRequestContext()
     const timestamp = new Date().toISOString()

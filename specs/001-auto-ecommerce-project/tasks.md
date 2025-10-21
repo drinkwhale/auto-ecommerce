@@ -19,9 +19,9 @@
 ---
 
 ## Phase 3.1: 기초 확립 & 운영 준비
-- [ ] **T001** 검증: Next.js · Tailwind · Prisma 설정 점검 및 필요한 경우 `README.md` 설치 절차 보완
-- [ ] **T002** `.env.example` 강화 및 비밀키 취급 지침 작성 (`docs/configuration.md`)
-- [ ] **T003** 구조화 로거/트레이싱 헬퍼 작성 (`src/lib/logger.ts`, `src/lib/request-context.ts`)
+- [x] **T001** 검증: Next.js · Tailwind · Prisma 설정 점검 및 필요한 경우 `README.md` 설치 절차 보완
+- [x] **T002** `.env.example` 강화 및 비밀키 취급 지침 작성 (`docs/configuration.md`)
+- [x] **T003** 구조화 로거/트레이싱 헬퍼 작성 (`src/lib/logger.ts`, `src/lib/request-context.ts`)
 
 ## Phase 3.2: Taobao 상품 수집 GraphQL 흐름
 - [ ] **T010** GraphQL Mutation 계약/테스트 정의 (`tests/graphql/mutations.test.ts`, `contracts/graphql/product-ingestion.graphql`)

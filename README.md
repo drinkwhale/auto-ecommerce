@@ -111,17 +111,17 @@ Tailwind 설정은 `tailwind.config.js`, 전역 스타일은 `src/app/globals.cs
 
 ---
 
-## 라이선스 & 문의
+## 라이선스
 
-본 프로젝트는 **CC BY-NC-SA 4.0 (Creative Commons Attribution-NonCommercial-ShareAlike)** 라이선스를 따릅니다.
+이 프로젝트는 **[CC BY-NC-SA 4.0 (Creative Commons Attribution-NonCommercial-ShareAlike)](https://creativecommons.org/licenses/by-nc-sa/4.0/deed.ko)** 라이선스로 배포됩니다.
 
-### 주요 제약사항
-- **상업적 이용 금지**: 상업적 목적으로 사용할 수 없습니다.
-- **저작자 표시**: 원본 출처를 반드시 명시해야 합니다.
-- **동일 조건 변경 허락**: 2차 저작물도 동일한 라이선스 조건을 따라야 합니다.
+![CC BY-NC-SA 4.0](https://licensebuttons.net/l/by-nc-sa/4.0/88x31.png)
 
-### 문의 및 기여
-- **버그 리포트 및 기능 제안**: GitHub Issues를 통해 제출해주세요.
-- **이메일 문의**: jackslash@naver.com
+> 상업적 이용은 불가능하며, 출처를 표시해야 하고, 동일한 조건으로만 배포할 수 있습니다.
 
-본 프로젝트는 개인 프로젝트로 시작했지만, 팀 개발로 확장 가능한 구조로 설계되었습니다.
+---
+
+## 문의
+
+- Issues를 통해 버그 리포트 및 기능 제안 가능
+- 이메일: jackslash@naver.com

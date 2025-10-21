@@ -1,0 +1,104 @@
+# Product Ingestion Mutation Contract
+
+## 개요
+Taobao 상품을 입력받아 시스템에 상품을 임포트하고, 가격 계산 및 타겟 마켓 설정까지 한 번에 처리하는 GraphQL Mutation 계약입니다.  
+실제 구현 전 TDD 단계에서 참조하기 위한 스펙 문서입니다.
+
+## Mutation
+```graphql
+mutation ImportTaobaoProduct($input: TaobaoImportInput!) {
+  importTaobaoProduct(input: $input) {
+    product {
+      id
+      status
+      sourceInfo {
+        sourceUrl
+        sourcePlatform
+        sourceProductId
+        lastCrawledAt
+      }
+      originalData {
+        title
+        description
+        price {
+          amount
+          currency
+          originalAmount
+        }
+        images {
+          originalUrl
+        }
+        specifications
+        category
+        brand
+        model
+      }
+      salesSettings {
+        marginRate
+        salePrice
+        targetMarkets
+        autoUpdate
+      }
+      monitoring {
+        priceHistory {
+          price
+          currency
+          timestamp
+          source
+        }
+      }
+      createdAt
+      updatedAt
+    }
+    pricingSummary {
+      baseCost
+      baseCurrency
+      convertedCost
+      targetCurrency
+      shippingCost
+      commissionAmount
+      marginAmount
+      salePrice
+      marginRate
+    }
+    warnings
+    message
+  }
+}
+```
+
+### TaobaoImportInput
+```graphql
+input TaobaoImportInput {
+  sourceUrl: String!
+  sourceProductId: String
+  marginRate: Float!              # 0.0 ~ 1.0 (0% ~ 100%)
+  targetCurrency: Currency!       # default KRW
+  exchangeRate: Float             # targetCurrency per CNY
+  shippingCost: Float
+  commissionRate: Float           # 0.0 ~ 0.3
+  roundingUnit: Int               # e.g. 100 (원 단위 반올림)
+  targetMarkets: [OpenMarketPlatform!]!
+  autoUpdate: Boolean = true
+  tags: [String!]
+  metadata: JSON
+}
+```
+
+### 응답 필드 설명
+| 필드 | 설명 |
+| --- | --- |
+| `product` | 생성(또는 갱신)된 상품 정보 |
+| `pricingSummary` | 가격 계산 과정 요약 (원가/마진/수수료/판매가) |
+| `warnings` | 비즈니스 규칙 위반 또는 참고사항 (예: 마진율 자동 조정) |
+| `message` | 처리 결과 메시지 |
+
+### 에러 시나리오
+| 코드 | 설명 |
+| --- | --- |
+| `TAOBAO_FETCH_FAILED` | Taobao 상품 데이터 파싱 실패 |
+| `PRICING_CALCULATION_FAILED` | 가격 계산 오류 (환율/마진 입력 문제) |
+| `PRODUCT_VALIDATION_FAILED` | 필수 데이터 누락 또는 유효성 실패 |
+| `DUPLICATED_IMPORT` | 동일 URL/상품이 이미 등록되어 있음 |
+
+> 이 계약은 T210/T211/T212 테스트 및 구현의 기준 스펙으로 사용됩니다.

@@ -186,6 +186,37 @@ Task: "ProductService 상품 관리 로직 in src/services/product.service.ts"
 Task: "OrderService 주문 처리 로직 in src/services/order.service.ts"
 ```
 
+## Phase 3.1 (MVP 운영 준비 확장)
+- [x] **T001** 검증: Next.js · Tailwind · Prisma 설정 점검 및 필요한 경우 `README.md` 설치 절차 보완
+- [x] **T002** `.env.example` 강화 및 비밀키 취급 지침 작성 (`docs/configuration.md`)
+- [x] **T003** 구조화 로거/트레이싱 헬퍼 작성 (`src/lib/logger.ts`, `src/lib/request-context.ts`)
+
+## Phase 3.2 (Taobao 상품 수집 GraphQL 흐름)
+- [ ] **T010** GraphQL Mutation 계약/테스트 정의 (`tests/graphql/mutations.test.ts`, `contracts/graphql/product-ingestion.graphql`)
+- [ ] **T011** 가격 산식 모듈 구현 및 단위 테스트 (`src/services/pricing.service.ts`, `tests/unit/pricing.service.test.ts`)
+- [ ] **T012** Taobao import Mutation 구현 및 Error 핸들링 (`src/app/api/graphql/route.ts`, `src/services/crawling.service.ts`)
+
+## Phase 3.3 (쿠팡 연동 MVP)
+- [ ] **T020** 쿠팡 어댑터 인터페이스 + mock 구현 (`src/services/marketplace/elevenst.adapter.ts`)
+- [ ] **T021** 외부 API 재시도·백오프 유틸 추가 (`src/lib/external-client.ts`, `tests/unit/external-client.test.ts`)
+- [ ] **T022** Taobao → 쿠팡 통합 테스트 갱신 (`tests/integration/product-registration.test.ts`)
+
+## Phase 3.4 (백그라운드 동기화 & 관측성)
+- [ ] **T030** 재고/가격 동기화 잡 스케줄링 (`src/lib/cron/inventory-sync.ts`, `tests/unit/cron/inventory-sync.test.ts`)
+- [ ] **T031** 번역 캐시 정책 및 비용 가드 구현 (`src/services/translation.service.ts`, `tests/unit/translation.service.test.ts`)
+- [ ] **T032** BullMQ 큐 로깅/메트릭 삽입 (`src/lib/queue/translation-queue.ts`, `docs/runbooks/queues.md`)
+
+## Phase 3.5 (UI 사용자 여정)
+- [ ] **T040** GraphQL Mutation을 `src/app/products/page.tsx`에 연결하고 성공/에러 토스트 제공
+- [ ] **T041** `src/components/product/ProductForm.tsx`에 단계별 진행 상태/검증 메시지 추가
+- [ ] **T042** Playwright E2E 시나리오로 Taobao → 쿠팡 흐름 검증 (`tests/e2e/product-ingestion.spec.ts`)
+
+## Phase 3.6 (품질 게이트 & 문서화)
+- [ ] **T050** 운영 런북 작성 (`docs/runbooks/taobao-to-elevenst.md`)
+- [ ] **T051** 커버리지 70% 이상 CI 체크 설정 (`package.json`, `.github/workflows/test.yml`)
+- [ ] **T052** API 응답/큐 딜레이 스모크 테스트 (`tests/performance/api-smoke.test.ts`)
+- [ ] **T053** README · AGENTS · quickstart 갱신으로 MVP 흐름 반영
+
 ## 검증 체크리스트
 - [x] 모든 계약 파일(OpenAPI, GraphQL)에 대응하는 테스트 존재
 - [x] 모든 엔티티(7개)에 대한 모델 생성 작업 존재
